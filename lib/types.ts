@@ -32,6 +32,7 @@ export interface Lesson extends LessonFrontmatter {
   introHtml: string;
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
+  duvidaHtml: string;
 }
 
 export interface LessonSummary extends LessonFrontmatter {

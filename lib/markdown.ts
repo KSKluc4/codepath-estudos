@@ -114,6 +114,7 @@ export interface LessonBody {
   introHtml: string;
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
+  duvidaHtml: string;
 }
 
 export function parseLessonBody(markdown: string): LessonBody {
@@ -123,6 +124,7 @@ export function parseLessonBody(markdown: string): LessonBody {
   const introNodes: RootContent[] = [];
   const exercicios: Exercicio[] = [];
   let quiz: QuizPergunta[] = [];
+  let duvidaNodes: RootContent[] = [];
 
   for (const secao of secoesH2) {
     if (secao.titulo === null) {
@@ -137,6 +139,8 @@ export function parseLessonBody(markdown: string): LessonBody {
         .filter((q): q is QuizPergunta => q !== null);
     } else if (tituloNorm.startsWith("exercicio")) {
       exercicios.push(parseExercicio(secao));
+    } else if (tituloNorm.startsWith("tirou duvida") || tituloNorm.startsWith("tirou a duvida")) {
+      duvidaNodes = secao.nodes;
     } else {
       introNodes.push({ type: "heading", depth: 2, children: [{ type: "text", value: secao.titulo }] } as RootContent);
       introNodes.push(...secao.nodes);
@@ -147,5 +151,6 @@ export function parseLessonBody(markdown: string): LessonBody {
     introHtml: nodesToHtml(introNodes),
     exercicios,
     quiz,
+    duvidaHtml: duvidaNodes.length ? nodesToHtml(duvidaNodes) : "",
   };
 }

@@ -281,3 +281,12 @@ bits por cor (normalmente 8 bits por canal, dando 256 tons de cada cor primária
 
 > Todo caractere é armazenado, no fundo, como um número (por exemplo, "A" é 65 no ASCII), e esse
 > número é representado em binário, que por sua vez é representado por níveis de tensão elétrica.
+
+## Tirou dúvida?
+
+Se travar em algum ponto desta aula, descreva o contexto exato do que você já entendeu e onde
+travou. Copie e adapte o modelo abaixo:
+
+> Estou estudando "Binário e como números viram eletricidade" do meu curso de programação. Contexto:
+> a aula explica o sistema posicional em base 2 e como converter números entre decimal e binário.
+> Minha dúvida/meu exercício: [descreva aqui exatamente onde travou].

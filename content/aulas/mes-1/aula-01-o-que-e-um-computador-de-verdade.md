@@ -245,3 +245,12 @@ celular, (f) o processador (CPU).
 > Enquanto você edita um documento, as mudanças ficam na RAM (memória de trabalho volátil). Só
 > quando você salva, elas são gravadas no disco (armazenamento permanente). Se o programa trava
 > antes de salvar, essas mudanças na RAM se perdem.
+
+## Tirou dúvida?
+
+Se travar em algum ponto desta aula, uma boa forma de pedir ajuda (para um professor, colega, ou uma
+IA) é descrever o contexto exato em vez de só dizer "não entendi". Copie e adapte o modelo abaixo:
+
+> Estou estudando "O que é um computador, de verdade" do meu curso de programação. Contexto: a aula
+> explica as camadas de abstração entre um clique do mouse e a imagem na tela, e a diferença entre
+> hardware e software. Minha dúvida/meu exercício: [descreva aqui exatamente onde travou].

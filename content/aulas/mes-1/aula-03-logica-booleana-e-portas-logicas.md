@@ -255,3 +255,12 @@ estar ativado.
 
 > Toda condição em código (if, condições com E/OU) é uma expressão de lógica booleana, que
 > eventualmente é avaliada fisicamente por redes de portas lógicas dentro do processador.
+
+## Tirou dúvida?
+
+Se travar em algum ponto desta aula, descreva o contexto exato do que você já entendeu e onde
+travou. Copie e adapte o modelo abaixo:
+
+> Estou estudando "Lógica booleana e portas lógicas" do meu curso de programação. Contexto: a aula
+> explica os operadores AND, OR e NOT, e como portas lógicas os implementam fisicamente com
+> transistores. Minha dúvida/meu exercício: [descreva aqui exatamente onde travou].

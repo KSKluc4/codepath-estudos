@@ -40,6 +40,7 @@ export function getAllLessons(): Lesson[] {
       introHtml: body.introHtml,
       exercicios: body.exercicios,
       quiz: body.quiz,
+      duvidaHtml: body.duvidaHtml,
     };
   });
 

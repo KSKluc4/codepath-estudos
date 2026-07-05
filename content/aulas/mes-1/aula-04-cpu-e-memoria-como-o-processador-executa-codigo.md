@@ -235,3 +235,12 @@ diferente.
 
 > Registradores ficam dentro da própria CPU e são a memória mais rápida que existe no sistema — mas
 > justamente por isso, têm capacidade extremamente limitada, guardando só os valores em uso imediato.
+
+## Tirou dúvida?
+
+Se travar em algum ponto desta aula, descreva o contexto exato do que você já entendeu e onde
+travou. Copie e adapte o modelo abaixo:
+
+> Estou estudando "CPU e memória — como o processador executa código" do meu curso de programação.
+> Contexto: a aula explica o ciclo fetch-decode-execute e a hierarquia de memória (registradores,
+> cache, RAM, disco). Minha dúvida/meu exercício: [descreva aqui exatamente onde travou].

@@ -116,6 +116,21 @@ export default function LessonPageClient({
 
       <QuizBlock slug={lesson.slug} perguntas={lesson.quiz} />
 
+      {!emBreve && lesson.duvidaHtml && (
+        <div className="card border-primary-subtle mt-4">
+          <div className="card-body">
+            <h2 className="h6 fw-semibold mb-2">
+              <i className="bi bi-chat-dots me-2 text-primary" />
+              Tirou dúvida?
+            </h2>
+            <div
+              className="lesson-content mb-0"
+              dangerouslySetInnerHTML={{ __html: lesson.duvidaHtml }}
+            />
+          </div>
+        </div>
+      )}
+
       {!emBreve && (
         <div className="d-flex justify-content-center my-5">
           <MarcarConcluidaButton slug={lesson.slug} />
