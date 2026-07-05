@@ -1,17 +1,23 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+:root,
+[data-bs-theme="dark"] {
+  --bs-primary: #5ec8f8;
+  --bs-primary-rgb: 94, 200, 248;
+  --bs-primary-text-emphasis: #9fdffc;
+  --bs-primary-bg-subtle: #0d2b3a;
+  --bs-primary-border-subtle: #164a63;
+  --bs-link-color: #5ec8f8;
+  --bs-link-hover-color: #9fdffc;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  --bs-body-bg: #0b0f14;
+  --bs-body-color: #dbe4ec;
+  --bs-tertiary-bg: #12181f;
+  --bs-secondary-bg: #161d25;
+  --bs-border-color: #23303b;
 
-html {
-  height: 100%;
+  --codepath-accent: #5ec8f8;
+  --codepath-accent-2: #7ee3c3;
+
+  color-scheme: dark;
 }
 
 html,
@@ -21,29 +27,192 @@ body {
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+code,
+pre,
+.font-mono {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.btn-primary {
+  --bs-btn-color: #062534;
+  --bs-btn-hover-color: #062534;
+  --bs-btn-active-color: #062534;
+  font-weight: 600;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* ---------- Layout geral ---------- */
+
+.app-navbar {
+  background: linear-gradient(180deg, #0f1620, #0b0f14);
+  backdrop-filter: blur(6px);
+}
+
+.app-shell {
+  min-height: calc(100vh - 62px);
+}
+
+.sidebar-offcanvas {
+  width: 300px;
+  background-color: #0d131a;
+}
+
+@media (min-width: 992px) {
+  .sidebar-offcanvas {
+    position: sticky;
+    top: 62px;
+    height: calc(100vh - 62px);
   }
+}
+
+.busca-resultados {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+}
+
+main.flex-grow-1 {
+  padding: 1.75rem 1.25rem 4rem;
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  main.flex-grow-1 {
+    padding: 2.5rem 3rem 5rem;
+  }
+}
+
+/* ---------- Cards e conteúdo ---------- */
+
+.card {
+  background-color: #10161e;
+  border-color: var(--bs-border-color);
+}
+
+.lesson-card {
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--bs-primary);
+  box-shadow: 0 8px 24px rgba(94, 200, 248, 0.12);
+}
+
+.hero-panel {
+  background: radial-gradient(circle at top left, rgba(94, 200, 248, 0.12), transparent 60%),
+    linear-gradient(160deg, #121a24, #0c1017);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 1rem;
+}
+
+.lesson-content h2 {
+  margin-top: 2rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--bs-primary-text-emphasis);
+  border-bottom: 1px solid var(--bs-border-color);
+  padding-bottom: 0.4rem;
+}
+
+.lesson-content h3 {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.lesson-content p {
+  line-height: 1.75;
+}
+
+.lesson-content ul,
+.lesson-content ol {
+  line-height: 1.75;
+  padding-left: 1.5rem;
+}
+
+.lesson-content pre {
+  background-color: #0a0e13 !important;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.6rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.lesson-content :not(pre) > code {
+  background-color: rgba(94, 200, 248, 0.12);
+  color: #9fdffc;
+  padding: 0.15em 0.4em;
+  border-radius: 0.35rem;
+  font-size: 0.9em;
+}
+
+.lesson-content blockquote {
+  border-left: 3px solid var(--bs-primary);
+  padding: 0.5rem 1rem;
+  background-color: rgba(94, 200, 248, 0.06);
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.lesson-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lesson-content th,
+.lesson-content td {
+  border: 1px solid var(--bs-border-color);
+  padding: 0.5rem 0.75rem;
+}
+
+/* ---------- Sidebar accordion ---------- */
+
+.accordion-button {
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  color: var(--bs-primary-text-emphasis) !important;
+  background-color: rgba(94, 200, 248, 0.08) !important;
+}
+
+.accordion-button::after {
+  filter: invert(1) grayscale(1) brightness(2);
+}
+
+.list-group-item.active {
+  background-color: rgba(94, 200, 248, 0.14) !important;
+  border-color: var(--bs-primary) !important;
+  color: var(--bs-primary-text-emphasis) !important;
+}
+
+/* ---------- Quiz ---------- */
+
+.quiz-opcao {
+  cursor: pointer;
+  border-color: var(--bs-border-color) !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quiz-opcao:hover {
+  background-color: rgba(94, 200, 248, 0.06);
+}
+
+/* ---------- Progress bars ---------- */
+
+.progress {
+  background-color: #161d25;
+}
+
+/* ---------- Utilitários ---------- */
+
+.text-gradient {
+  background: linear-gradient(90deg, var(--codepath-accent), var(--codepath-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
