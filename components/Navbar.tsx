@@ -32,6 +32,10 @@ export default function Navbar() {
         </div>
 
         <div className="d-flex align-items-center gap-2">
+          <Link href="/linguagens" className="btn btn-outline-secondary btn-sm d-none d-sm-inline-flex align-items-center gap-1">
+            <i className="bi bi-translate" />
+            Linguagens
+          </Link>
           <span className="badge text-bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-1 px-2 py-2">
             <i className="bi bi-fire" />
             {streak} {streak === 1 ? "dia" : "dias"}

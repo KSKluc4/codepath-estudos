@@ -48,3 +48,40 @@ export interface MesMeta {
   descricao: string;
   topicos: string[];
 }
+
+export type Nivel = "basico" | "intermediario" | "avancado";
+
+export interface ChapterFrontmatter {
+  numero: number;
+  titulo: string;
+  nivel: Nivel;
+  objetivo: string;
+  duracao?: number;
+  status: LessonStatus;
+}
+
+export interface Chapter extends ChapterFrontmatter {
+  trilha: string;
+  capitulo: string;
+  slug: string;
+  introHtml: string;
+  exercicios: Exercicio[];
+  quiz: QuizPergunta[];
+  duvidaHtml: string;
+}
+
+export interface ChapterSummary extends ChapterFrontmatter {
+  trilha: string;
+  capitulo: string;
+  slug: string;
+  temExercicios: boolean;
+  temQuiz: boolean;
+}
+
+export interface TrackMeta {
+  id: string;
+  nome: string;
+  descricao: string;
+  icone: string;
+  cor: string;
+}

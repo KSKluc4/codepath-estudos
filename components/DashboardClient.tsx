@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useLessons } from "@/lib/lessons-context";
+import { useChapters } from "@/lib/chapters-context";
 import { useProgress } from "@/lib/progress-context";
+import TrackCard from "./TrackCard";
 
 export default function DashboardClient() {
   const { lessons, meses, isUnlocked } = useLessons();
+  const { trilhas } = useChapters();
   const { isCompleted, streak, hidratado } = useProgress();
 
   const completaveis = lessons.filter((l) => l.status === "completo");
@@ -121,6 +124,23 @@ export default function DashboardClient() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="d-flex align-items-center justify-content-between mt-5 mb-3">
+        <h2 className="h5 fw-bold mb-0">
+          <i className="bi bi-translate me-2 text-primary" />
+          Linguagens
+        </h2>
+        <Link href="/linguagens" className="btn btn-outline-secondary btn-sm">
+          Ver todas <i className="bi bi-arrow-right ms-1" />
+        </Link>
+      </div>
+      <div className="row g-3">
+        {trilhas.map((trilha) => (
+          <div className="col-12 col-sm-6 col-lg-4 col-xl" key={trilha.id}>
+            <TrackCard trilha={trilha} />
+          </div>
+        ))}
       </div>
     </div>
   );

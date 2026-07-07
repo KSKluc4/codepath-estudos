@@ -10,6 +10,8 @@ import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { getLessonSummaries } from "@/lib/lessons";
 import { MESES } from "@/lib/months";
+import { getChapterSummaries } from "@/lib/chapters";
+import { TRILHAS } from "@/lib/tracks";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +35,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const lessons = getLessonSummaries();
+  const chapters = getChapterSummaries();
 
   return (
     <html lang="pt-BR" data-bs-theme="dark" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <AppProviders lessons={lessons} meses={MESES}>
+        <AppProviders lessons={lessons} meses={MESES} chapters={chapters} trilhas={TRILHAS}>
           <BootstrapClient />
           <Navbar />
           <div className="d-flex app-shell">
