@@ -26,6 +26,22 @@ export const TRILHAS: TrackMeta[] = [
     cor: "#A78BFA",
   },
   {
+    id: "cpp",
+    nome: "C++",
+    descricao:
+      "C com orientação a objetos, templates e a STL: referência para quando C não é mais suficiente.",
+    icone: "bi-plus-square-fill",
+    cor: "#00599C",
+  },
+  {
+    id: "csharp",
+    nome: "C#",
+    descricao:
+      "Sintaxe, orientação a objetos, coleções e async/await no ecossistema .NET.",
+    icone: "bi-filetype-cs",
+    cor: "#9B4F96",
+  },
+  {
     id: "sql",
     nome: "SQL",
     descricao: "Consultas, joins e modelagem de bancos relacionais, direto ao ponto.",
