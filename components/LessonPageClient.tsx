@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import { Lesson } from "@/lib/types";
 import { useLessons } from "@/lib/lessons-context";
 import { useProgress } from "@/lib/progress-context";
 import ExerciseBlock from "./ExerciseBlock";
 import QuizBlock from "./QuizBlock";
 import MarcarConcluidaButton from "./MarcarConcluidaButton";
+import LessonAudioPlayer from "./LessonAudioPlayer";
 
 export default function LessonPageClient({
   lesson,
@@ -19,6 +21,7 @@ export default function LessonPageClient({
 }) {
   const { isUnlocked } = useLessons();
   const { hidratado, isCompleted } = useProgress();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   if (!hidratado) {
     return (
@@ -100,7 +103,13 @@ export default function LessonPageClient({
         </div>
       )}
 
-      <div className="lesson-content mb-4" dangerouslySetInnerHTML={{ __html: lesson.introHtml }} />
+      {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={lesson.slug} />}
+
+      <div
+        ref={contentRef}
+        className="lesson-content mb-4"
+        dangerouslySetInnerHTML={{ __html: lesson.introHtml }}
+      />
 
       {lesson.exercicios.length > 0 && (
         <section className="mb-4">

@@ -251,6 +251,22 @@ main.flex-grow-1 {
   color: var(--bs-primary-text-emphasis) !important;
 }
 
+/* ---------- Player de áudio da aula ---------- */
+
+.lesson-audio-player {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 5;
+}
+
+.audio-reading-active {
+  background-color: rgba(94, 200, 248, 0.14);
+  outline: 2px solid rgba(94, 200, 248, 0.35);
+  outline-offset: 3px;
+  border-radius: 0.35rem;
+  transition: background-color 0.2s ease, outline-color 0.2s ease;
+}
+
 /* ---------- Quiz ---------- */
 
 .quiz-opcao {
