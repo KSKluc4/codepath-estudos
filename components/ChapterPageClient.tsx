@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
 import { Chapter } from "@/lib/types";
 import { NIVEL_LABELS } from "@/lib/niveis";
 import { useChapters } from "@/lib/chapters-context";
@@ -9,6 +10,7 @@ import CopyableHtml from "./CopyableHtml";
 import ChapterExerciseBlock from "./ChapterExerciseBlock";
 import QuizBlock from "./QuizBlock";
 import MarcarConcluidaButton from "./MarcarConcluidaButton";
+import LessonAudioPlayer from "./LessonAudioPlayer";
 
 export default function ChapterPageClient({
   chapter,
@@ -21,6 +23,7 @@ export default function ChapterPageClient({
 }) {
   const { getTrackMeta } = useChapters();
   const { hidratado, isCompleted } = useProgress();
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const trilha = getTrackMeta(chapter.trilha);
 
@@ -80,7 +83,9 @@ export default function ChapterPageClient({
         </div>
       )}
 
-      <CopyableHtml html={chapter.introHtml} className="lesson-content mb-4" />
+      {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={chapter.slug} />}
+
+      <CopyableHtml ref={contentRef} html={chapter.introHtml} className="lesson-content mb-4" />
 
       {chapter.exercicios.length > 0 && (
         <section className="mb-4">
