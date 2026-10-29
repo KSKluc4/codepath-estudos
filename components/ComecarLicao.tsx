@@ -4,8 +4,8 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "@/lib/types";
 import { EstadoLicao, VIDAS_POR_LICAO, iniciarLicao, montarCards } from "@/lib/licao";
-import BitSvg from "./BitSvg";
-import { precarregarBit3D } from "./BitMascote";
+import ZyreSvg from "./ZyreSvg";
+import { precarregarZyre3D } from "./ZyreMascote";
 import type { ProximaEtapa } from "./ModoLicao";
 
 const ModoLicao = dynamic(() => import("./ModoLicao"), {
@@ -21,7 +21,7 @@ const ModoLicao = dynamic(() => import("./ModoLicao"), {
 
 function precarregar() {
   void import("./ModoLicao");
-  precarregarBit3D();
+  precarregarZyre3D();
 }
 
 export default function ComecarLicao({
@@ -50,8 +50,8 @@ export default function ComecarLicao({
   return (
     <>
       <div className="licao-cta mb-4">
-        <span className="licao-cta-bit">
-          <BitSvg />
+        <span className="licao-cta-zyre">
+          <ZyreSvg />
         </span>
         <div className="flex-grow-1 min-w-0">
           <div className="fw-bold">Estude no modo lição</div>

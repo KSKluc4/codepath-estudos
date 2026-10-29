@@ -294,7 +294,7 @@ main.flex-grow-1 {
   color: transparent;
 }
 
-/* ---------- Mascote Bit ---------- */
+/* ---------- Mascote Zyre ---------- */
 
 .mascote-wrapper {
   position: fixed;
@@ -334,46 +334,118 @@ main.flex-grow-1 {
   overflow: visible;
 }
 
-.mascote-grad-a {
-  stop-color: var(--codepath-accent);
+/* Zyre 2D (SVG): fallback do 3D, avatar do chat e mapa */
+
+.zyre-svg {
+  --zyre-chama: #7fd8ff;
+  --zyre-contorno: #0b2230;
 }
 
-.mascote-grad-b {
-  stop-color: var(--codepath-accent-2);
+.zyre-svg-pensando {
+  --zyre-chama: #f8d35e;
 }
 
-.mascote-tela {
-  fill: #0b0f14;
+.zyre-svg-comemorando {
+  --zyre-chama: #34d399;
 }
 
-.mascote-olho {
+.zyre-svg-triste {
+  --zyre-chama: #a78bfa;
+}
+
+.zyre-pelo-a {
+  stop-color: #8edffd;
+}
+
+.zyre-pelo-b {
+  stop-color: #45b6ee;
+}
+
+.zyre-contorno {
+  stroke: var(--zyre-contorno);
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+}
+
+.zyre-claro {
+  fill: #d9f5ff;
+}
+
+.zyre-orelha-dentro,
+.zyre-iris {
   fill: var(--codepath-accent-2);
-  transform-box: fill-box;
-  transform-origin: center;
 }
 
-.mascote-boca {
+.zyre-chifre {
+  fill: var(--codepath-accent-2);
+  stroke: var(--zyre-contorno);
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+
+.zyre-cauda-contorno,
+.zyre-cauda-pelo {
   fill: none;
-  stroke: var(--codepath-accent);
-  stroke-width: 2;
   stroke-linecap: round;
 }
 
-.mascote-antena {
-  stroke: var(--codepath-accent);
-  stroke-width: 2.5;
+.zyre-cauda-contorno {
+  stroke: var(--zyre-contorno);
+  stroke-width: 11.4;
+}
+
+.zyre-cauda-pelo,
+.zyre-cauda-ponta {
+  stroke-width: 8.6;
+}
+
+.zyre-cauda-ponta {
+  fill: none;
+  stroke: #d9f5ff;
   stroke-linecap: round;
 }
 
-.mascote-led {
-  fill: var(--codepath-accent-2);
+.zyre-bochecha {
+  fill: #ff9ec7;
+  opacity: 0.55;
 }
 
-.mascote-bits {
-  fill: #062534;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 8px;
-  font-weight: 700;
+.zyre-olho-fundo,
+.zyre-nariz {
+  fill: #0b1e2b;
+}
+
+.zyre-reflexo,
+.zyre-chama-nucleo {
+  fill: #fff;
+}
+
+.zyre-boca {
+  fill: none;
+  stroke: #0b1e2b;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zyre-boca-aberta {
+  fill: #0b1e2b;
+}
+
+.zyre-brilho-a {
+  stop-color: var(--zyre-chama);
+  stop-opacity: 0.75;
+}
+
+.zyre-brilho-b {
+  stop-color: var(--zyre-chama);
+  stop-opacity: 0;
+}
+
+.zyre-chama-fogo {
+  fill: var(--zyre-chama);
+  stroke: var(--zyre-contorno);
+  stroke-width: 1;
 }
 
 .mascote-sombra {
@@ -382,59 +454,117 @@ main.flex-grow-1 {
   transform-origin: center;
 }
 
-.mascote-botao .mascote-corpo {
-  animation: mascote-flutuar 3s ease-in-out infinite;
+/* Pivôs das partes animadas, em coordenadas do viewBox 64x72 */
+.zyre-inteiro,
+.zyre-cauda,
+.zyre-chama,
+.zyre-cabeca,
+.zyre-orelha,
+.zyre-olhos {
+  transform-box: view-box;
+  transition: transform 0.25s ease;
 }
 
-.mascote-botao .mascote-sombra {
-  animation: mascote-sombra 3s ease-in-out infinite;
+.zyre-inteiro { transform-origin: 30px 67px; }
+.zyre-cauda { transform-origin: 37px 58px; }
+.zyre-chama { transform-origin: 53px 32px; }
+.zyre-cabeca { transform-origin: 30px 42px; }
+.zyre-orelha-esq { transform-origin: 20px 20px; }
+.zyre-orelha-dir { transform-origin: 40px 20px; }
+.zyre-olhos { transform-origin: 30px 30px; }
+
+.zyre-olho,
+.zyre-boca,
+.zyre-chama-fogo {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.25s ease;
 }
 
-.mascote-botao .mascote-olho {
-  animation: mascote-piscar 4.5s infinite;
+.zyre-chama-fogo {
+  transform-origin: 50% 100%;
 }
 
-.mascote-pensando .mascote-corpo {
-  animation: mascote-balancar 0.9s ease-in-out infinite;
-}
+.zyre-svg-olhando .zyre-olhos { transform: translate(-1.6px, -0.4px); }
+.zyre-svg-olhando .zyre-cabeca { transform: rotate(-4deg); }
+.zyre-svg-pensando .zyre-cabeca { transform: rotate(-9deg); }
+.zyre-svg-pensando .zyre-olhos { transform: translate(1.6px, -1.8px); }
+.zyre-svg-comemorando .zyre-chama { transform: scale(1.35); }
+.zyre-svg-comemorando .zyre-olho { transform: scaleY(0.35); }
+.zyre-svg-triste .zyre-orelha-esq { transform: rotate(-32deg); }
+.zyre-svg-triste .zyre-orelha-dir { transform: rotate(32deg); }
+.zyre-svg-triste .zyre-cabeca { transform: translateY(1.5px) rotate(4deg); }
+.zyre-svg-triste .zyre-olhos { transform: translateY(1.4px) scaleY(0.68); }
+.zyre-svg-triste .zyre-cauda { transform: rotate(28deg); }
+.zyre-svg-triste .zyre-chama { transform: scale(0.68); }
 
-.mascote-pensando .mascote-olhos {
-  transform: translate(3px, -3px);
-  transition: transform 0.2s ease;
-}
+@media (prefers-reduced-motion: no-preference) {
+  .zyre-svg .zyre-inteiro { animation: mascote-flutuar 3s ease-in-out infinite; }
+  .zyre-svg .mascote-sombra { animation: mascote-sombra 3s ease-in-out infinite; }
+  .zyre-svg .zyre-olho { animation: zyre-piscar 4.5s infinite; }
+  .zyre-svg .zyre-cauda { animation: zyre-abanar 1.8s ease-in-out infinite; }
+  .zyre-svg .zyre-chama-fogo { animation: zyre-tremular 0.45s ease-in-out infinite alternate; }
+  .zyre-svg .zyre-orelha-dir { animation: zyre-orelhada 5s ease-in-out infinite; }
 
-.mascote-pensando .mascote-led {
-  animation: mascote-led 0.6s ease-in-out infinite alternate;
+  .zyre-svg-pensando .zyre-cauda { animation-duration: 3.2s; }
+  .zyre-svg-pensando .zyre-chama { animation: zyre-pulsar 1s ease-in-out infinite; }
+  .zyre-svg-falando .zyre-boca { animation: zyre-falar 0.22s ease-in-out infinite alternate; }
+  .zyre-svg-falando .zyre-chama { animation: zyre-pulsar 0.44s ease-in-out infinite; }
+  .zyre-svg-comemorando .zyre-inteiro { animation: zyre-pular 0.7s ease-in-out infinite; }
+  .zyre-svg-comemorando .zyre-cauda { animation: zyre-abanar 0.35s ease-in-out infinite; }
+  .zyre-svg-comemorando .zyre-olho,
+  .zyre-svg-triste .zyre-inteiro,
+  .zyre-svg-triste .zyre-cauda,
+  .zyre-svg-triste .zyre-orelha-dir {
+    animation: none;
+  }
 }
 
 @keyframes mascote-flutuar {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  50% { transform: translateY(-3px); }
 }
 
 @keyframes mascote-sombra {
   0%, 100% { transform: scaleX(1); opacity: 1; }
-  50% { transform: scaleX(0.8); opacity: 0.6; }
+  50% { transform: scaleX(0.82); opacity: 0.6; }
 }
 
-@keyframes mascote-piscar {
+@keyframes zyre-piscar {
   0%, 92%, 100% { transform: scaleY(1); }
   95% { transform: scaleY(0.1); }
 }
 
-@keyframes mascote-balancar {
-  0%, 100% { transform: rotate(-4deg) translateY(-2px); }
-  50% { transform: rotate(4deg) translateY(-2px); }
+@keyframes zyre-abanar {
+  0%, 100% { transform: rotate(-7deg); }
+  50% { transform: rotate(7deg); }
 }
 
-@keyframes mascote-led {
-  from { fill: var(--codepath-accent-2); }
-  to { fill: #f8d35e; }
+@keyframes zyre-tremular {
+  from { transform: scale(0.94, 1.05); }
+  to { transform: scale(1.04, 0.95); }
 }
 
-.mascote-corpo {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
+@keyframes zyre-pulsar {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes zyre-orelhada {
+  0%, 88%, 96%, 100% { transform: rotate(0); }
+  92% { transform: rotate(14deg); }
+}
+
+@keyframes zyre-falar {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0.4); }
+}
+
+@keyframes zyre-pular {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(0) scale(1.08, 0.9); }
+  45% { transform: translateY(-9px) scale(0.95, 1.06); }
+  75% { transform: translateY(0) scale(1.06, 0.94); }
 }
 
 .mascote-painel {
@@ -521,10 +651,6 @@ main.flex-grow-1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mascote-botao .mascote-corpo,
-  .mascote-botao .mascote-sombra,
-  .mascote-botao .mascote-olho,
-  .mascote-pensando .mascote-led,
   .mascote-painel,
   .mascote-digitando span {
     animation: none;
@@ -611,7 +737,7 @@ main.flex-grow-1 {
     linear-gradient(120deg, #0f1c26, #10161e);
 }
 
-.licao-cta-bit {
+.licao-cta-zyre {
   width: 52px;
   height: 58px;
   flex-shrink: 0;
@@ -749,7 +875,7 @@ main.flex-grow-1 {
   min-width: 0;
 }
 
-.licao-bit {
+.licao-zyre {
   position: sticky;
   top: 0.5rem;
   display: flex;
@@ -758,7 +884,7 @@ main.flex-grow-1 {
   gap: 0.75rem;
 }
 
-.licao-bit-figura {
+.licao-zyre-figura {
   width: 200px;
   height: 220px;
 }
@@ -1213,66 +1339,6 @@ main.flex-grow-1 {
   background-color: var(--bs-tertiary-bg);
 }
 
-/* Bit SVG dentro da lição (fallback do 3D) */
-
-.licao-bit-figura .mascote-corpo,
-.licao-cta-bit .mascote-corpo {
-  animation: mascote-flutuar 3s ease-in-out infinite;
-}
-
-.licao-bit-figura .mascote-sombra {
-  animation: mascote-sombra 3s ease-in-out infinite;
-}
-
-.licao-bit-figura .mascote-olho {
-  animation: mascote-piscar 4.5s infinite;
-}
-
-.mascote-olhos,
-.mascote-boca {
-  transform-box: fill-box;
-  transform-origin: center;
-  transition: transform 0.25s ease;
-}
-
-.bit-svg-olhando .mascote-olhos {
-  transform: translate(-2px, -1px);
-}
-
-.bit-svg-pensando .mascote-corpo {
-  animation: mascote-balancar 0.9s ease-in-out infinite;
-}
-
-.bit-svg-pensando .mascote-olhos {
-  transform: translate(3px, -3px);
-}
-
-.bit-svg-pensando .mascote-led {
-  animation: mascote-led 0.6s ease-in-out infinite alternate;
-}
-
-.bit-svg-falando .mascote-boca {
-  animation: bit-svg-falar 0.22s ease-in-out infinite alternate;
-}
-
-.licao-bit-figura .bit-svg-comemorando .mascote-corpo {
-  animation: bit-svg-pular 0.7s ease-in-out infinite;
-}
-
-.bit-svg-comemorando .mascote-olho {
-  animation: none;
-  transform: scaleY(0.55);
-}
-
-.licao-bit-figura .bit-svg-triste .mascote-corpo {
-  animation: none;
-  transform: translateY(2px) rotate(-4deg);
-}
-
-.bit-svg-triste .mascote-olhos {
-  transform: translateY(1.5px) scaleY(0.7);
-}
-
 @keyframes licao-abrir {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1328,32 +1394,20 @@ main.flex-grow-1 {
   to { opacity: 1; transform: none; }
 }
 
-@keyframes bit-svg-pular {
-  0%, 100% { transform: translateY(0) scale(1, 1); }
-  15% { transform: translateY(0) scale(1.08, 0.9); }
-  45% { transform: translateY(-9px) scale(0.95, 1.06); }
-  75% { transform: translateY(0) scale(1.06, 0.94); }
-}
-
-@keyframes bit-svg-falar {
-  from { transform: scaleY(1); }
-  to { transform: scaleY(0.35); }
-}
-
 @media (max-width: 991.98px) {
   .licao-palco {
     grid-template-columns: minmax(0, 1fr);
     gap: 1rem;
   }
 
-  .licao-bit {
+  .licao-zyre {
     position: static;
     flex-direction: row-reverse;
     align-items: flex-end;
     justify-content: flex-end;
   }
 
-  .licao-bit-figura {
+  .licao-zyre-figura {
     flex-shrink: 0;
     width: 84px;
     height: 92px;
@@ -1373,7 +1427,7 @@ main.flex-grow-1 {
     transform: rotate(45deg);
   }
 
-  .licao-palco-resultado .licao-bit {
+  .licao-palco-resultado .licao-zyre {
     order: -1;
     flex-direction: column;
     align-items: center;
@@ -1391,7 +1445,7 @@ main.flex-grow-1 {
     transform: translateX(-50%) rotate(45deg);
   }
 
-  .licao-palco-resultado .licao-bit-figura {
+  .licao-palco-resultado .licao-zyre-figura {
     width: 130px;
     height: 143px;
   }
@@ -1444,8 +1498,7 @@ main.flex-grow-1 {
 
 @media (prefers-reduced-motion: reduce) {
   .licao-overlay,
-  .licao-overlay *,
-  .licao-cta-bit .mascote-corpo {
+  .licao-overlay * {
     animation: none !important;
     transition: none !important;
   }
@@ -1462,21 +1515,21 @@ main.flex-grow-1 {
   pointer-events: none;
 }
 
-/* ---------- Bit 3D ---------- */
+/* ---------- Zyre 3D ---------- */
 
-.bit-mascote {
+.zyre-mascote {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-.bit-mascote .bit-3d {
+.zyre-mascote .zyre-3d {
   position: absolute !important;
   inset: 0;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-.bit-mascote-3d .bit-3d {
+.zyre-mascote-3d .zyre-3d {
   opacity: 1;
 }

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="pelo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8edffd"/>
+      <stop offset="100%" stop-color="#45b6ee"/>
+    </linearGradient>
+  </defs>
+  <g stroke="#0b2230" stroke-width="2.4" stroke-linejoin="round">
+    <path d="M9 34 L5 3 L28 18 Z" fill="url(#pelo)"/>
+    <path d="M55 34 L59 3 L36 18 Z" fill="url(#pelo)"/>
+    <path d="M11.5 27 L9.5 10 L22 19 Z" fill="#7ee3c3" stroke="none"/>
+    <path d="M52.5 27 L54.5 10 L42 19 Z" fill="#7ee3c3" stroke="none"/>
+    <ellipse cx="32" cy="38" rx="25" ry="22.5" fill="url(#pelo)"/>
+  </g>
+  <ellipse cx="22.5" cy="47" rx="10" ry="7.5" fill="#d9f5ff"/>
+  <ellipse cx="41.5" cy="47" rx="10" ry="7.5" fill="#d9f5ff"/>
+  <ellipse cx="32" cy="49" rx="8" ry="6.5" fill="#d9f5ff"/>
+  <ellipse cx="21" cy="36" rx="6" ry="7.5" fill="#0b1e2b"/>
+  <ellipse cx="43" cy="36" rx="6" ry="7.5" fill="#0b1e2b"/>
+  <ellipse cx="21" cy="38.5" rx="4" ry="4.3" fill="#7ee3c3"/>
+  <ellipse cx="43" cy="38.5" rx="4" ry="4.3" fill="#7ee3c3"/>
+  <circle cx="19" cy="33" r="2.3" fill="#fff"/>
+  <circle cx="41" cy="33" r="2.3" fill="#fff"/>
+  <ellipse cx="32" cy="45.5" rx="2.6" ry="1.8" fill="#0b1e2b"/>
+</svg>

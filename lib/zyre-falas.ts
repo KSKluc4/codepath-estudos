@@ -20,7 +20,7 @@ export const FALAS = {
     "Essa voltou! Agora você já sabe a pegadinha.",
     "Segunda chance. Lembra da explicação?",
   ],
-  acerto: ["Isso aí!", "Mandou bem!", "Exato!", "Na mosca!", "Acertou em cheio!"],
+  acerto: ["Isso aí!", "Mandou bem!", "Exato!", "Na mosca!", "Acertou em cheio!", "Minha chama até cresceu!"],
   combo: [
     "{n} seguidas! Tá voando!",
     "Combo de {n}! Ninguém te segura.",
@@ -41,7 +41,12 @@ export const FALAS = {
     "Desafio opcional! Tenta antes de olhar a solução.",
     "Esse não vale vida. É só pra praticar de verdade.",
   ],
-  fim: ["Lição concluída! Tô orgulhoso de você.", "Arrasou! Mais uma pra conta.", "Isso que é foco!"],
+  fim: [
+    "Lição concluída! Tô orgulhoso de você.",
+    "Arrasou! Mais uma pra conta.",
+    "Isso que é foco!",
+    "Minha cauda não para de balançar!",
+  ],
 };
 
 export function sortearFala(opcoes: string[], combo = 0): string {

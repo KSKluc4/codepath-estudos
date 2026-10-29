@@ -6,8 +6,8 @@ import { useLessons } from "@/lib/lessons-context";
 import { useChapters } from "@/lib/chapters-context";
 import { MASCOTE_NOME } from "@/lib/mascote";
 import { useModoLicaoAberto } from "@/lib/modo-licao";
-import BitSvg from "./BitSvg";
-import BitMascote, { precarregarBit3D } from "./BitMascote";
+import ZyreSvg from "./ZyreSvg";
+import ZyreMascote, { precarregarZyre3D } from "./ZyreMascote";
 
 interface Mensagem {
   role: "user" | "assistant";
@@ -98,9 +98,9 @@ export default function MascotChat() {
   };
 
   const esperandoPrimeiroTexto = carregando && mensagens[mensagens.length - 1]?.content === "";
-  let estadoBit: "idle" | "pensando" | "falando" = "idle";
-  if (esperandoPrimeiroTexto) estadoBit = "pensando";
-  else if (carregando) estadoBit = "falando";
+  let estadoZyre: "idle" | "pensando" | "falando" = "idle";
+  if (esperandoPrimeiroTexto) estadoZyre = "pensando";
+  else if (carregando) estadoZyre = "falando";
 
   return (
     <div className="mascote-wrapper" hidden={modoLicaoAberto}>
@@ -108,7 +108,7 @@ export default function MascotChat() {
         <div className="card mascote-painel shadow-lg" role="dialog" aria-label={`Chat com o ${MASCOTE_NOME}`}>
           <div className="card-header d-flex align-items-center gap-2">
             <span className="mascote-avatar">
-              <BitSvg />
+              <ZyreSvg />
             </span>
             <div className="flex-grow-1 min-w-0">
               <div className="fw-bold text-gradient">{MASCOTE_NOME}</div>
@@ -169,13 +169,13 @@ export default function MascotChat() {
           setAberto((a) => !a);
           setUsar3d(true);
         }}
-        onPointerEnter={precarregarBit3D}
-        onFocus={precarregarBit3D}
+        onPointerEnter={precarregarZyre3D}
+        onFocus={precarregarZyre3D}
         aria-label={aberto ? `Fechar chat com o ${MASCOTE_NOME}` : `Abrir chat com o ${MASCOTE_NOME}`}
         aria-expanded={aberto}
         title={`Pergunte ao ${MASCOTE_NOME}`}
       >
-        <BitMascote estado={estadoBit} compacto permitir3d={usar3d} pausado={modoLicaoAberto} />
+        <ZyreMascote estado={estadoZyre} compacto permitir3d={usar3d} pausado={modoLicaoAberto} />
       </button>
     </div>
   );

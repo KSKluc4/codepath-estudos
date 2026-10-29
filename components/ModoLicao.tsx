@@ -8,10 +8,10 @@ import { useProgress } from "@/lib/progress-context";
 import { useMediaQuery, useMovimentoReduzido } from "@/lib/useMediaQuery";
 import { setModoLicaoAberto } from "@/lib/modo-licao";
 import { calcularNivel } from "@/lib/xp";
-import { FALAS, sortearFala } from "@/lib/bit-falas";
+import { FALAS, sortearFala } from "@/lib/zyre-falas";
 import { Som, tocarSom } from "@/lib/sons";
 import { dispararConfete } from "@/lib/confete";
-import { BitEstado, MASCOTE_NOME } from "@/lib/mascote";
+import { ZyreEstado, MASCOTE_NOME } from "@/lib/mascote";
 import {
   CardLicao,
   EstadoLicao,
@@ -27,7 +27,7 @@ import {
   selecionarOpcao,
   verificarResposta,
 } from "@/lib/licao";
-import BitMascote from "./BitMascote";
+import ZyreMascote from "./ZyreMascote";
 import { CardConceito, CardDesafio, CardPergunta } from "./LicaoCards";
 
 export interface ProximaEtapa {
@@ -54,7 +54,7 @@ function falaDoCard(item: ItemFila | undefined): string {
   return Math.random() < 0.4 ? sortearFala(FALAS.conceito) : "";
 }
 
-function estadoDoBit(estado: EstadoLicao, explicacao: Explicacao | null, falando: boolean): BitEstado {
+function estadoDoZyre(estado: EstadoLicao, explicacao: Explicacao | null, falando: boolean): ZyreEstado {
   if (explicacao?.status === "pensando") return "pensando";
   if (explicacao?.status === "escrevendo") return "falando";
   if (estado.fase === "fim") return "comemorando";
@@ -93,7 +93,7 @@ export default function ModoLicao({
   const [nivelAlcancado, setNivelAlcancado] = useState<number | null>(null);
   const corpoRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const bitRef = useRef<HTMLElement>(null);
+  const zyreRef = useRef<HTMLElement>(null);
   const pedidoRef = useRef<AbortController | null>(null);
 
   const item = itemAtual(estado);
@@ -141,7 +141,7 @@ export default function ModoLicao({
     const controle = new AbortController();
     pedidoRef.current = controle;
     setExplicacao({ status: "pensando", texto: "" });
-    bitRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
+    zyreRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
 
     try {
       const res = await fetch("/api/chat", {
@@ -436,7 +436,7 @@ export default function ModoLicao({
             )}
           </div>
 
-          <aside className="licao-bit" ref={bitRef} aria-live="polite">
+          <aside className="licao-zyre" ref={zyreRef} aria-live="polite">
             {explicacao ? (
               <div className="licao-balao licao-balao-explicacao">
                 {explicacao.status === "pensando" ? (
@@ -456,9 +456,9 @@ export default function ModoLicao({
                 </div>
               )
             )}
-            <div className="licao-bit-figura">
-              <BitMascote
-                estado={estadoDoBit(estado, explicacao, falando)}
+            <div className="licao-zyre-figura">
+              <ZyreMascote
+                estado={estadoDoZyre(estado, explicacao, falando)}
                 intensidade={estado.fase === "fim" ? 3 : multiplicador}
                 gatilho={reacao}
                 olhar={telaLarga ? "esquerda" : "cima"}
@@ -508,7 +508,7 @@ export default function ModoLicao({
                   disabled={explicacao !== null}
                   onClick={pedirExplicacao}
                 >
-                  <i className="bi bi-robot me-2" />
+                  <i className="bi bi-stars me-2" />
                   {MASCOTE_NOME}, me explica
                 </button>
               )}
