@@ -14,6 +14,7 @@ const KEYS = {
   unlockAll: "codepath.unlockAll",
   quizAnswers: "codepath.quizAnswers",
   exerciseDrafts: "codepath.exerciseDrafts",
+  xp: "codepath.xp",
 };
 
 type QuizAnswers = Record<string, Record<number, number>>;
@@ -26,6 +27,7 @@ interface ProgressData {
   unlockAll: boolean;
   quizAnswers: QuizAnswers;
   exerciseDrafts: ExerciseDrafts;
+  xp: number;
 }
 
 const SERVER_SNAPSHOT: ProgressData = {
@@ -35,6 +37,7 @@ const SERVER_SNAPSHOT: ProgressData = {
   unlockAll: false,
   quizAnswers: {},
   exerciseDrafts: {},
+  xp: 0,
 };
 
 function readJson<T>(key: string, fallback: T): T {
@@ -56,6 +59,7 @@ function computeSnapshot(): ProgressData {
     unlockAll: readJson<boolean>(KEYS.unlockAll, false),
     quizAnswers: readJson<QuizAnswers>(KEYS.quizAnswers, {}),
     exerciseDrafts: readJson<ExerciseDrafts>(KEYS.exerciseDrafts, {}),
+    xp: readJson<number>(KEYS.xp, 0),
   };
 }
 
@@ -119,6 +123,8 @@ interface ProgressContextValue {
   setQuizAnswer: (slug: string, perguntaIdx: number, opcaoIdx: number) => void;
   exerciseDrafts: ExerciseDrafts;
   setExerciseDraft: (slug: string, exercicioIdx: number, texto: string) => void;
+  xp: number;
+  adicionarXp: (quantidade: number) => void;
   resetarProgresso: () => void;
 }
 
@@ -161,6 +167,11 @@ function setExerciseDraft(slug: string, exercicioIdx: number, texto: string) {
   });
 }
 
+function adicionarXp(quantidade: number) {
+  if (quantidade <= 0) return;
+  persist(KEYS.xp, getSnapshot().xp + quantidade);
+}
+
 function resetarProgresso() {
   Object.values(KEYS).forEach((key) => window.localStorage.removeItem(key));
   invalidateAndNotify();
@@ -185,6 +196,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     setQuizAnswer,
     exerciseDrafts: data.exerciseDrafts,
     setExerciseDraft,
+    xp: data.xp,
+    adicionarXp,
     resetarProgresso,
   };
 

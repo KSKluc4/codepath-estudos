@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useLessons } from "@/lib/lessons-context";
 import { useChapters } from "@/lib/chapters-context";
 import { MASCOTE_NOME } from "@/lib/mascote";
+import { useModoLicaoAberto } from "@/lib/modo-licao";
+import BitSvg from "./BitSvg";
 
 interface Mensagem {
   role: "user" | "assistant";
@@ -27,38 +29,10 @@ function useTituloAtual(): string | undefined {
   return undefined;
 }
 
-function BitSvg() {
-  const gradienteId = `bit-gradiente-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  return (
-    <svg viewBox="0 0 64 72" className="mascote-svg" aria-hidden="true">
-      <defs>
-        <linearGradient id={gradienteId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" className="mascote-grad-a" />
-          <stop offset="100%" className="mascote-grad-b" />
-        </linearGradient>
-      </defs>
-      <ellipse className="mascote-sombra" cx="32" cy="68" rx="16" ry="3" />
-      <g className="mascote-corpo">
-        <line x1="32" y1="14" x2="32" y2="7" className="mascote-antena" />
-        <circle cx="32" cy="5" r="3.2" className="mascote-led" />
-        <rect x="8" y="14" width="48" height="46" rx="14" fill={`url(#${gradienteId})`} />
-        <rect x="15" y="22" width="34" height="23" rx="8" className="mascote-tela" />
-        <g className="mascote-olhos">
-          <ellipse cx="25" cy="32" rx="3.4" ry="4" className="mascote-olho" />
-          <ellipse cx="39" cy="32" rx="3.4" ry="4" className="mascote-olho" />
-        </g>
-        <path d="M27 39 Q32 42.5 37 39" className="mascote-boca" />
-        <text x="32" y="55" textAnchor="middle" className="mascote-bits">
-          01
-        </text>
-      </g>
-    </svg>
-  );
-}
-
 export default function MascotChat() {
   const pathname = usePathname();
   const titulo = useTituloAtual();
+  const modoLicaoAberto = useModoLicaoAberto();
   const [aberto, setAberto] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [texto, setTexto] = useState("");
@@ -124,7 +98,7 @@ export default function MascotChat() {
   const esperandoPrimeiroTexto = carregando && mensagens[mensagens.length - 1]?.content === "";
 
   return (
-    <div className="mascote-wrapper">
+    <div className="mascote-wrapper" hidden={modoLicaoAberto}>
       {aberto && (
         <div className="card mascote-painel shadow-lg" role="dialog" aria-label={`Chat com o ${MASCOTE_NOME}`}>
           <div className="card-header d-flex align-items-center gap-2">
