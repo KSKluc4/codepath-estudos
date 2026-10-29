@@ -1,12 +1,22 @@
 import { Exercicio, QuizPergunta, SecaoConteudo } from "./types";
+import { ExercicioCodigo, ExercicioLacuna, ExercicioMontar } from "./exercicios-codigo";
 
 export const VIDAS_POR_LICAO = 3;
 export const XP_POR_ACERTO = 10;
 
 export type CardLicao =
-  | { tipo: "conceito"; titulo: string | null; html: string; parte: number; totalPartes: number }
+  | { tipo: "conceito"; titulo: string | null; html: string; secao: number; parte: number; totalPartes: number }
   | { tipo: "pergunta"; indice: number; pergunta: QuizPergunta }
+  | { tipo: "montar"; indice: number; exercicio: ExercicioMontar }
+  | { tipo: "lacuna"; indice: number; exercicio: ExercicioLacuna }
   | { tipo: "desafio"; indice: number; exercicio: Exercicio };
+
+// Cards que valem XP, mexem no combo e gastam vida quando errados
+export type CardPontuado = Extract<CardLicao, { tipo: "pergunta" | "montar" | "lacuna" }>;
+
+export function ehPontuado(card: CardLicao | undefined): card is CardPontuado {
+  return card?.tipo === "pergunta" || card?.tipo === "montar" || card?.tipo === "lacuna";
+}
 
 export interface ItemFila {
   card: CardLicao;
@@ -21,6 +31,7 @@ export interface EstadoLicao {
   posicao: number;
   fase: FaseLicao;
   selecionada: number | null;
+  resposta: number[];
   acertou: boolean | null;
   solucaoVisivel: boolean;
   vidas: number;
@@ -34,20 +45,27 @@ export interface EstadoLicao {
 }
 
 // As perguntas são espalhadas de forma uniforme entre os cards de conceito
-// (ex.: 10 conceitos e 5 perguntas → uma pergunta a cada 2 conceitos).
+// (ex.: 10 conceitos e 5 perguntas → uma pergunta a cada 2 conceitos). Os exercícios
+// de código entram logo depois do conceito de onde o bloco de código saiu.
 export function montarCards(
   secoes: SecaoConteudo[],
   quiz: QuizPergunta[],
-  exercicios: Exercicio[]
+  exercicios: Exercicio[],
+  exerciciosCodigo: ExercicioCodigo[] = []
 ): CardLicao[] {
-  const conceitos: CardLicao[] = secoes.flatMap((secao) =>
+  const conceitos = secoes.flatMap((secao, s) =>
     secao.partes.map((html, i) => ({
       tipo: "conceito" as const,
       titulo: secao.titulo,
       html,
+      secao: s,
       parte: i + 1,
       totalPartes: secao.partes.length,
     }))
+  );
+  const codigo = exerciciosCodigo.map(
+    (exercicio, indice): Extract<CardLicao, { tipo: "montar" | "lacuna" }> =>
+      exercicio.tipo === "montar" ? { tipo: "montar", indice, exercicio } : { tipo: "lacuna", indice, exercicio }
   );
   const perguntas: CardLicao[] = quiz
     .map((pergunta, indice) => ({ tipo: "pergunta" as const, indice, pergunta }))
@@ -58,6 +76,7 @@ export function montarCards(
   let proxima = 0;
   conceitos.forEach((conceito, i) => {
     cards.push(conceito);
+    cards.push(...codigo.filter((c) => c.exercicio.secao === conceito.secao && c.exercicio.parte === conceito.parte - 1));
     const vistos = i + 1;
     while (
       proxima < perguntas.length &&
@@ -79,8 +98,23 @@ function embaralhar(quantidade: number, aleatorio: () => number): number[] {
   return ordem;
 }
 
+function textoMontado(exercicio: ExercicioMontar, ordem: number[]): string {
+  return ordem.map((i) => exercicio.linhas[i]).join("\n");
+}
+
+// No "Monte o código", ordemOpcoes é a ordem em que as linhas aparecem embaralhadas.
+// Na primeira vez usa a ordem fixa do exercício; na repetição, embaralha de novo.
 function criarItem(card: CardLicao, aleatorio: () => number, repeticao = false): ItemFila {
-  const ordemOpcoes = card.tipo === "pergunta" ? embaralhar(card.pergunta.opcoes.length, aleatorio) : [];
+  let ordemOpcoes: number[] = [];
+  if (card.tipo === "pergunta") ordemOpcoes = embaralhar(card.pergunta.opcoes.length, aleatorio);
+  if (card.tipo === "lacuna") ordemOpcoes = embaralhar(card.exercicio.opcoes.length, aleatorio);
+  if (card.tipo === "montar") {
+    const correto = card.exercicio.linhas.join("\n");
+    ordemOpcoes = card.exercicio.ordem;
+    while (repeticao && textoMontado(card.exercicio, ordemOpcoes) === correto) {
+      ordemOpcoes = embaralhar(card.exercicio.linhas.length, aleatorio);
+    }
+  }
   return { card, ordemOpcoes, repeticao };
 }
 
@@ -90,6 +124,7 @@ export function iniciarLicao(cards: CardLicao[], aleatorio: () => number): Estad
     posicao: 0,
     fase: cards.length > 0 ? "card" : "fim",
     selecionada: null,
+    resposta: [],
     acertou: null,
     solucaoVisivel: false,
     vidas: VIDAS_POR_LICAO,
@@ -115,18 +150,60 @@ export function multiplicadorCombo(combo: number): number {
 
 export function selecionarOpcao(estado: EstadoLicao, posicaoOpcao: number): EstadoLicao {
   const item = itemAtual(estado);
-  if (estado.fase !== "card" || item?.card.tipo !== "pergunta") return estado;
+  if (estado.fase !== "card" || (item?.card.tipo !== "pergunta" && item?.card.tipo !== "lacuna")) return estado;
   if (posicaoOpcao < 0 || posicaoOpcao >= item.ordemOpcoes.length) return estado;
   return { ...estado, selecionada: posicaoOpcao };
 }
 
+function montando(estado: EstadoLicao): ExercicioMontar | undefined {
+  const card = itemAtual(estado)?.card;
+  return estado.fase === "card" && card?.tipo === "montar" ? card.exercicio : undefined;
+}
+
+export function colocarLinha(estado: EstadoLicao, linha: number): EstadoLicao {
+  const exercicio = montando(estado);
+  if (!exercicio || estado.resposta.includes(linha) || linha < 0 || linha >= exercicio.linhas.length) return estado;
+  return { ...estado, resposta: [...estado.resposta, linha] };
+}
+
+export function retirarLinha(estado: EstadoLicao, posicao: number): EstadoLicao {
+  if (!montando(estado) || posicao < 0 || posicao >= estado.resposta.length) return estado;
+  return { ...estado, resposta: estado.resposta.filter((_, i) => i !== posicao) };
+}
+
+export function moverLinha(estado: EstadoLicao, de: number, para: number): EstadoLicao {
+  const { resposta } = estado;
+  if (!montando(estado) || de === para || para < 0 || para >= resposta.length || de < 0 || de >= resposta.length) {
+    return estado;
+  }
+  const nova = resposta.filter((_, i) => i !== de);
+  nova.splice(para, 0, resposta[de]);
+  return { ...estado, resposta: nova };
+}
+
+export function podeVerificar(estado: EstadoLicao): boolean {
+  const card = itemAtual(estado)?.card;
+  if (estado.fase !== "card" || !ehPontuado(card)) return false;
+  if (card.tipo === "montar") return estado.resposta.length === card.exercicio.linhas.length;
+  return estado.selecionada !== null;
+}
+
+function respostaCorreta(estado: EstadoLicao, item: ItemFila): boolean {
+  const { card } = item;
+  const escolhida = item.ordemOpcoes[estado.selecionada ?? -1];
+  if (card.tipo === "pergunta") return card.pergunta.opcoes[escolhida]?.correta === true;
+  if (card.tipo === "lacuna") return escolhida === card.exercicio.correta;
+  // Qualquer ordem que gere o mesmo texto vale (ex.: duas linhas "}" trocadas)
+  if (card.tipo === "montar") return textoMontado(card.exercicio, estado.resposta) === card.exercicio.linhas.join("\n");
+  return false;
+}
+
 export function verificarResposta(estado: EstadoLicao): EstadoLicao {
   const item = itemAtual(estado);
-  if (estado.fase !== "card" || item?.card.tipo !== "pergunta" || estado.selecionada === null) return estado;
+  if (!item || !podeVerificar(estado)) return estado;
 
-  const opcao = item.card.pergunta.opcoes[item.ordemOpcoes[estado.selecionada]];
   const base = { ...estado, fase: "feedback" as const, respostas: estado.respostas + 1 };
-  if (opcao.correta) {
+  if (respostaCorreta(estado, item)) {
     const combo = estado.combo + 1;
     return {
       ...base,
@@ -150,7 +227,7 @@ export function continuar(estado: EstadoLicao, aleatorio: () => number): EstadoL
   if (!item) return estado;
 
   let { fila, concluidos } = estado;
-  if (item.card.tipo === "pergunta") {
+  if (ehPontuado(item.card)) {
     if (estado.fase !== "feedback") return estado;
     if (!estado.acertou) {
       if (estado.vidas <= 0) return { ...estado, fase: "sem-vidas" };
@@ -173,6 +250,7 @@ export function continuar(estado: EstadoLicao, aleatorio: () => number): EstadoL
     posicao,
     fase: posicao >= fila.length ? "fim" : "card",
     selecionada: null,
+    resposta: [],
     acertou: null,
     solucaoVisivel: false,
   };

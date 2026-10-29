@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useMemo, useRef } from "react";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "@/lib/types";
+import { ExercicioCodigo } from "@/lib/exercicios-codigo";
 import { VIDAS_POR_LICAO, montarCards } from "@/lib/licao";
 import ZyreSvg from "./ZyreSvg";
 import { precarregarZyre3D } from "./ZyreMascote";
@@ -31,6 +32,7 @@ export default function ComecarLicao({
   secoes,
   quiz,
   exercicios,
+  exerciciosCodigo,
   proxima,
 }: {
   slug: string;
@@ -38,11 +40,15 @@ export default function ComecarLicao({
   secoes: SecaoConteudo[];
   quiz: QuizPergunta[];
   exercicios: Exercicio[];
+  exerciciosCodigo: ExercicioCodigo[];
   proxima?: ProximaEtapa;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const cards = useMemo(() => montarCards(secoes, quiz, exercicios), [secoes, quiz, exercicios]);
+  const cards = useMemo(
+    () => montarCards(secoes, quiz, exercicios, exerciciosCodigo),
+    [secoes, quiz, exercicios, exerciciosCodigo]
+  );
   const abriuPeloBotao = useRef(false);
 
   if (cards.length === 0) return null;
@@ -67,6 +73,7 @@ export default function ComecarLicao({
 
   const conceitos = cards.filter((c) => c.tipo === "conceito").length;
   const perguntas = cards.filter((c) => c.tipo === "pergunta").length;
+  const deCodigo = cards.filter((c) => c.tipo === "montar" || c.tipo === "lacuna").length;
 
   return (
     <>
@@ -77,8 +84,8 @@ export default function ComecarLicao({
         <div className="flex-grow-1 min-w-0">
           <div className="fw-bold">Estude no modo lição</div>
           <div className="small text-body-secondary">
-            {conceitos} cards curtos · {perguntas} {perguntas === 1 ? "pergunta" : "perguntas"} ·{" "}
-            {VIDAS_POR_LICAO} vidas
+            {conceitos} cards curtos · {perguntas} {perguntas === 1 ? "pergunta" : "perguntas"}
+            {deCodigo > 0 && ` · ${deCodigo} de código`} · {VIDAS_POR_LICAO} vidas
           </div>
         </div>
         <button

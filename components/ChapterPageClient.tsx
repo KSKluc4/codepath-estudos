@@ -92,6 +92,7 @@ export default function ChapterPageClient({
             secoes={chapter.secoes}
             quiz={chapter.quiz}
             exercicios={chapter.exercicios}
+            exerciciosCodigo={chapter.exerciciosCodigo}
             proxima={
               capituloProximo
                 ? { href: `/linguagens/${chapter.trilha}/${capituloProximo}`, rotulo: "Próximo capítulo" }

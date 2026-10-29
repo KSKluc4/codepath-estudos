@@ -6,6 +6,7 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
 import type { Root, RootContent, Heading, List, ListItem, Blockquote, Code } from "mdast";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "./types";
+import { BlocoCodigo } from "./exercicios-codigo";
 
 const renderProcessor = unified()
   .use(remarkRehype)
@@ -187,8 +188,20 @@ function dividirEmPartes(nodes: RootContent[]): RootContent[][] {
   return partes;
 }
 
-function parseSecaoConteudo(titulo: string | null, nodes: RootContent[]): SecaoConteudo {
-  return { titulo, partes: dividirEmPartes(nodes).map(nodesToHtml) };
+function parseSecaoConteudo(
+  titulo: string | null,
+  nodes: RootContent[],
+  secao: number,
+  blocosCodigo: BlocoCodigo[]
+): SecaoConteudo {
+  const partes = dividirEmPartes(nodes);
+  partes.forEach((blocos, parte) => {
+    for (const bloco of blocos) {
+      if (bloco.type !== "code") continue;
+      blocosCodigo.push({ secao, parte, linguagem: (bloco.lang ?? "").toLowerCase(), codigo: bloco.value });
+    }
+  });
+  return { titulo, partes: partes.map(nodesToHtml) };
 }
 
 function parseExercicio(secao: Secao): Exercicio {
@@ -232,6 +245,7 @@ function parseQuizPergunta(secao: Secao): QuizPergunta | null {
 export interface LessonBody {
   introHtml: string;
   secoes: SecaoConteudo[];
+  blocosCodigo: BlocoCodigo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;
@@ -243,6 +257,7 @@ export function parseLessonBody(markdown: string): LessonBody {
 
   const introNodes: RootContent[] = [];
   const secoes: SecaoConteudo[] = [];
+  const blocosCodigo: BlocoCodigo[] = [];
   const exercicios: Exercicio[] = [];
   let quiz: QuizPergunta[] = [];
   let duvidaNodes: RootContent[] = [];
@@ -250,7 +265,7 @@ export function parseLessonBody(markdown: string): LessonBody {
   for (const secao of secoesH2) {
     if (secao.titulo === null) {
       introNodes.push(...secao.nodes);
-      if (secao.nodes.length > 0) secoes.push(parseSecaoConteudo(null, secao.nodes));
+      if (secao.nodes.length > 0) secoes.push(parseSecaoConteudo(null, secao.nodes, secoes.length, blocosCodigo));
       continue;
     }
     const tituloNorm = normalize(secao.titulo);
@@ -266,13 +281,14 @@ export function parseLessonBody(markdown: string): LessonBody {
     } else {
       introNodes.push({ type: "heading", depth: 2, children: [{ type: "text", value: secao.titulo }] } as RootContent);
       introNodes.push(...secao.nodes);
-      secoes.push(parseSecaoConteudo(secao.titulo, secao.nodes));
+      secoes.push(parseSecaoConteudo(secao.titulo, secao.nodes, secoes.length, blocosCodigo));
     }
   }
 
   return {
     introHtml: nodesToHtml(introNodes),
     secoes,
+    blocosCodigo,
     exercicios,
     quiz,
     duvidaHtml: duvidaNodes.length ? nodesToHtml(duvidaNodes) : "",

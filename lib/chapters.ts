@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { Chapter, ChapterFrontmatter, ChapterSummary } from "./types";
 import { parseLessonBody } from "./markdown";
+import { gerarExerciciosCodigo } from "./exercicios-codigo";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "linguagens");
 
@@ -47,6 +48,7 @@ export function getAllChapters(): Chapter[] {
       slug: `${trilha}-${capitulo}`,
       introHtml: body.introHtml,
       secoes: body.secoes,
+      exerciciosCodigo: gerarExerciciosCodigo(body.blocosCodigo, `${trilha}-${capitulo}`),
       exercicios: body.exercicios,
       quiz: body.quiz,
       duvidaHtml: body.duvidaHtml,

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { montarExplicacaoErro, montarSystemPrompt } from "@/lib/mascot-context";
+import { montarExplicacaoErro, montarExplicacaoExercicio, montarSystemPrompt } from "@/lib/mascot-context";
 
 const MODELO_PADRAO = "claude-haiku-5-5";
 const MAX_TOKENS = 1024;
@@ -32,7 +32,14 @@ export async function POST(request: Request) {
     return erro("Assistente indisponível: ANTHROPIC_API_KEY não configurada no servidor.", 503);
   }
 
-  let corpo: { pathname?: unknown; messages?: unknown; perguntaIndex?: unknown; opcaoEscolhida?: unknown };
+  let corpo: {
+    pathname?: unknown;
+    messages?: unknown;
+    perguntaIndex?: unknown;
+    opcaoEscolhida?: unknown;
+    exercicioIndex?: unknown;
+    resposta?: unknown;
+  };
   try {
     corpo = await request.json();
   } catch {
@@ -46,6 +53,11 @@ export async function POST(request: Request) {
   if (corpo.perguntaIndex !== undefined) {
     const explicacao = montarExplicacaoErro(pathname, corpo.perguntaIndex, corpo.opcaoEscolhida);
     if (!explicacao) return erro("Pergunta inválida.", 400);
+    system = explicacao.system;
+    mensagens = [{ role: "user", content: explicacao.pedido }];
+  } else if (corpo.exercicioIndex !== undefined) {
+    const explicacao = montarExplicacaoExercicio(pathname, corpo.exercicioIndex, corpo.resposta);
+    if (!explicacao) return erro("Exercício inválido.", 400);
     system = explicacao.system;
     mensagens = [{ role: "user", content: explicacao.pedido }];
   } else {

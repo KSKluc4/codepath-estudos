@@ -1,3 +1,5 @@
+import type { ExercicioCodigo } from "./exercicios-codigo";
+
 export type LessonStatus = "completo" | "em-breve";
 
 export interface QuizOpcao {
@@ -36,6 +38,7 @@ export interface Lesson extends LessonFrontmatter {
   slug: string;
   introHtml: string;
   secoes: SecaoConteudo[];
+  exerciciosCodigo: ExercicioCodigo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;
@@ -72,6 +75,7 @@ export interface Chapter extends ChapterFrontmatter {
   slug: string;
   introHtml: string;
   secoes: SecaoConteudo[];
+  exerciciosCodigo: ExercicioCodigo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;

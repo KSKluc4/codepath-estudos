@@ -2034,3 +2034,161 @@ main.flex-grow-1 {
 .conquista-progresso .progress-bar {
   background-color: var(--codepath-accent);
 }
+
+/* ---------- Exercícios de código no modo lição ---------- */
+
+.licao-codigo {
+  margin: 0 0 1.1rem;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.75rem;
+  background-color: #0a0e13;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.licao-codigo code {
+  padding: 0;
+  background: none;
+  color: #dbe4ec;
+  font-size: inherit;
+  white-space: pre;
+}
+
+.licao-lacuna {
+  display: inline-block;
+  min-width: 3.5em;
+  padding: 0 0.35em;
+  border-bottom: 2px dashed var(--codepath-accent);
+  border-radius: 0.3rem;
+  background-color: rgba(94, 200, 248, 0.1);
+  color: var(--codepath-accent);
+  text-align: center;
+}
+
+.licao-lacuna-escolhida {
+  border-bottom-style: solid;
+  color: #9fdffc;
+}
+
+.licao-lacuna-certa,
+.licao-lacuna-corrigida {
+  border-bottom: 2px solid var(--licao-certo);
+  background-color: var(--licao-certo-bg);
+  color: var(--licao-certo);
+}
+
+.licao-opcoes-codigo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.licao-opcoes-codigo .licao-opcao-texto {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.licao-montagem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 3rem;
+  margin: 0 0 1rem;
+  padding: 0.6rem;
+  border: 2px dashed var(--bs-border-color);
+  border-radius: 0.9rem;
+  list-style: none;
+}
+
+.licao-montagem-certa {
+  border-style: solid;
+  border-color: var(--licao-certo);
+  background-color: var(--licao-certo-bg);
+}
+
+.licao-montagem-errada {
+  border-style: solid;
+  border-color: var(--licao-errado);
+  background-color: var(--licao-errado-bg);
+}
+
+.licao-vaga {
+  height: 2.6rem;
+  border: 1px dashed #26323d;
+  border-radius: 0.6rem;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.licao-banco {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.licao-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.45rem 0.75rem;
+  border: 2px solid var(--bs-border-color);
+  border-bottom-width: 4px;
+  border-radius: 0.7rem;
+  background-color: #0d131a;
+  color: var(--bs-body-color);
+  text-align: left;
+  touch-action: manipulation;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Quebra a linha em vez de rolar: um <code> rolável roubaria o gesto de arrastar no celular */
+.licao-linha code {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: #dbe4ec;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.licao-linha-montada * {
+  touch-action: none;
+}
+
+.licao-linha:not(:disabled):hover {
+  border-color: #33475a;
+  background-color: #121a23;
+}
+
+.licao-linha:focus-visible {
+  outline: 2px solid var(--codepath-accent);
+  outline-offset: 2px;
+}
+
+.licao-linha:disabled {
+  cursor: default;
+}
+
+.licao-linha-montada {
+  border-color: var(--bs-primary-border-subtle);
+  background-color: var(--bs-primary-bg-subtle);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.licao-linha-arrastando {
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  cursor: grabbing;
+}
+
+.licao-linha-alca {
+  color: var(--bs-secondary-color);
+}

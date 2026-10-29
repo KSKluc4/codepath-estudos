@@ -112,6 +112,7 @@ export default function LessonPageClient({
             secoes={lesson.secoes}
             quiz={lesson.quiz}
             exercicios={lesson.exercicios}
+            exerciciosCodigo={lesson.exerciciosCodigo}
             proxima={slugProximo ? { href: `/aula/${slugProximo}`, rotulo: "Próxima aula" } : undefined}
           />
         </Suspense>

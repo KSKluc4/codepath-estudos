@@ -16,6 +16,11 @@ export const FALAS = {
     "Essa você sabe, confia.",
     "Dica: elimina primeiro as que com certeza estão erradas.",
   ],
+  montar: [
+    "Monta na ordem em que o computador executaria.",
+    "Dica: procura a linha que não depende de nenhuma outra.",
+  ],
+  lacuna: ["Qual pedacinho completa esse código?", "Lê a linha inteira antes de escolher."],
   repeticao: [
     "Essa voltou! Agora você já sabe a pegadinha.",
     "Segunda chance. Lembra da explicação?",
