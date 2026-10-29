@@ -46,6 +46,7 @@ export function getAllChapters(): Chapter[] {
       capitulo,
       slug: `${trilha}-${capitulo}`,
       introHtml: body.introHtml,
+      secoes: body.secoes,
       exercicios: body.exercicios,
       quiz: body.quiz,
       duvidaHtml: body.duvidaHtml,

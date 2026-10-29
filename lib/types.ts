@@ -11,6 +11,11 @@ export interface QuizPergunta {
   explicacaoHtml: string;
 }
 
+export interface SecaoConteudo {
+  titulo: string | null;
+  partes: string[];
+}
+
 export interface Exercicio {
   titulo: string;
   enunciadoHtml: string;
@@ -30,6 +35,7 @@ export interface LessonFrontmatter {
 export interface Lesson extends LessonFrontmatter {
   slug: string;
   introHtml: string;
+  secoes: SecaoConteudo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;
@@ -65,6 +71,7 @@ export interface Chapter extends ChapterFrontmatter {
   capitulo: string;
   slug: string;
   introHtml: string;
+  secoes: SecaoConteudo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;

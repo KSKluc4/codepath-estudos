@@ -38,6 +38,7 @@ export function getAllLessons(): Lesson[] {
       ...fm,
       slug: slugFromFrontmatter(fm),
       introHtml: body.introHtml,
+      secoes: body.secoes,
       exercicios: body.exercicios,
       quiz: body.quiz,
       duvidaHtml: body.duvidaHtml,
