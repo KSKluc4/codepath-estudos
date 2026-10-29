@@ -4,18 +4,18 @@ export interface NivelXp {
   xpParaProximo: number;
 }
 
-// TODO(Lucas): calcular o nível a partir do XP total.
-// Regra: todo mundo começa no nível 1 com 0 XP, e cada nível custa 50 XP a mais que o
-// anterior para subir: 1→2 custa 100, 2→3 custa 150, 3→4 custa 200, e assim por diante.
-// Devolva:
-//   - nivel: o nível atual;
-//   - xpNoNivel: quanto XP a pessoa já juntou dentro do nível atual;
-//   - xpParaProximo: quanto o nível atual custa no total para subir.
-// Dica: um while que vai "pagando" o custo de cada nível enquanto o XP der para pagar.
-// Como testar (Node 24 roda .ts direto):
-//   node --input-type=module -e "import { calcularNivel } from './lib/xp.ts'; for (const xp of [0, 99, 100, 260]) console.log(xp, calcularNivel(xp))"
-//   Esperado: 0 → nível 1 com 0/100; 99 → nível 1 com 99/100; 100 → nível 2 com 0/150;
-//   260 → nível 3 com 10/200. Depois confira o Navbar e a tela de fim da lição.
+const CUSTO_PRIMEIRO_NIVEL = 100;
+const AUMENTO_POR_NIVEL = 50;
+
+// Nível 1 começa com 0 XP; subir custa 100, depois 150, 200... (cada nível pede 50 a mais)
 export function calcularNivel(xp: number): NivelXp {
-  return { nivel: 1, xpNoNivel: xp, xpParaProximo: 100 };
+  let nivel = 1;
+  let restante = Math.max(0, Math.floor(xp));
+  let custo = CUSTO_PRIMEIRO_NIVEL;
+  while (restante >= custo) {
+    restante -= custo;
+    nivel++;
+    custo += AUMENTO_POR_NIVEL;
+  }
+  return { nivel, xpNoNivel: restante, xpParaProximo: custo };
 }
