@@ -1,15 +1,19 @@
-// TODO(Lucas): transformar o HTML da aula em texto puro e truncar em `limite` caracteres.
-// O que fazer:
-//   1. Remover todas as tags HTML (<p>, <strong>, <a href="...">...), mas manter o texto de dentro,
-//      inclusive o de <pre>/<code>: os exemplos de código são úteis pro Bit.
-//   2. Decodificar as entidades mais comuns: &amp; &lt; &gt; &quot; &#39;
-//   3. Juntar espaços/quebras de linha repetidos num só espaço e tirar espaço das pontas.
-//   4. Se passar de `limite`, cortar e terminar com "…".
-// Dica: String.prototype.replace com regex global, ex.: texto.replace(/<[^>]+>/g, " ").
-//   Atenção à ordem: decodificar &lt; antes de remover tags faria "&lt;b&gt;" virar uma tag.
-// Como testar (Node 24 roda .ts direto):
-//   node --input-type=module -e "import { htmlParaTexto } from './lib/html-texto.ts'; console.log(htmlParaTexto('<p>Oi &amp;  <b>tchau</b></p>\n<pre><code>x &lt; 3</code></pre>', 20))"
-//   Esperado: "Oi & tchau x < 3" e, com limite 5, "Oi & …" (ou parecido).
+const ENTIDADES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " };
+
+// O rehype gera referências numéricas (&#x3C;) e o parser do quiz gera nomeadas (&lt;)
+function decodificarEntidade(entidade: string, corpo: string): string {
+  if (corpo[0] !== "#") return ENTIDADES[corpo.toLowerCase()] ?? entidade;
+  const hexadecimal = corpo[1] === "x" || corpo[1] === "X";
+  const codigo = hexadecimal ? parseInt(corpo.slice(2), 16) : Number(corpo.slice(1));
+  return codigo > 0 && codigo <= 0x10ffff ? String.fromCodePoint(codigo) : entidade;
+}
+
+// Remove as tags antes de decodificar: assim "&lt;b&gt;" continua texto e não vira tag
 export function htmlParaTexto(html: string, limite: number): string {
-  return html.slice(0, limite);
+  const texto = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, decodificarEntidade)
+    .replace(/\s+/g, " ")
+    .trim();
+  return texto.length > limite ? `${texto.slice(0, Math.max(0, limite - 1)).trimEnd()}…` : texto;
 }
