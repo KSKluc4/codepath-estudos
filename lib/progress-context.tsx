@@ -7,6 +7,7 @@ import {
   useSyncExternalStore,
   ReactNode,
 } from "react";
+import { celebrar } from "./celebracoes";
 
 const KEYS = {
   completed: "codepath.completed",
@@ -16,7 +17,13 @@ const KEYS = {
   exerciseDrafts: "codepath.exerciseDrafts",
   xp: "codepath.xp",
   som: "codepath.som",
+  xpPorDia: "codepath.xpPorDia",
+  metaDiaria: "codepath.metaDiaria",
+  metasBatidas: "codepath.metasBatidas",
 };
+
+export const METAS_DIARIAS = [10, 20, 30, 50];
+const META_PADRAO = 20;
 
 type QuizAnswers = Record<string, Record<number, number>>;
 type ExerciseDrafts = Record<string, Record<number, string>>;
@@ -30,6 +37,10 @@ interface ProgressData {
   exerciseDrafts: ExerciseDrafts;
   xp: number;
   som: boolean;
+  xpPorDia: Record<string, number>;
+  metaDiaria: number;
+  metasBatidas: string[];
+  hoje: string;
 }
 
 const SERVER_SNAPSHOT: ProgressData = {
@@ -41,7 +52,18 @@ const SERVER_SNAPSHOT: ProgressData = {
   exerciseDrafts: {},
   xp: 0,
   som: true,
+  xpPorDia: {},
+  metaDiaria: META_PADRAO,
+  metasBatidas: [],
+  hoje: "",
 };
+
+// YYYY-MM-DD no fuso do aluno (toISOString usaria UTC e viraria o dia às 21h no Brasil)
+export function dataLocal(data = new Date()): string {
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+  return `${data.getFullYear()}-${mes}-${dia}`;
+}
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -55,6 +77,7 @@ function readJson<T>(key: string, fallback: T): T {
 let cachedSnapshot: ProgressData | null = null;
 
 function computeSnapshot(): ProgressData {
+  const meta = readJson<number>(KEYS.metaDiaria, META_PADRAO);
   return {
     hidratado: true,
     completed: readJson<string[]>(KEYS.completed, []),
@@ -64,6 +87,10 @@ function computeSnapshot(): ProgressData {
     exerciseDrafts: readJson<ExerciseDrafts>(KEYS.exerciseDrafts, {}),
     xp: readJson<number>(KEYS.xp, 0),
     som: readJson<boolean>(KEYS.som, true),
+    xpPorDia: readJson<Record<string, number>>(KEYS.xpPorDia, {}),
+    metaDiaria: METAS_DIARIAS.includes(meta) ? meta : META_PADRAO,
+    metasBatidas: readJson<string[]>(KEYS.metasBatidas, []),
+    hoje: dataLocal(),
   };
 }
 
@@ -131,6 +158,11 @@ interface ProgressContextValue {
   adicionarXp: (quantidade: number) => void;
   som: boolean;
   setSom: (value: boolean) => void;
+  xpHoje: number;
+  xpPorDia: Record<string, number>;
+  metaDiaria: number;
+  setMetaDiaria: (meta: number) => void;
+  metasBatidas: string[];
   resetarProgresso: () => void;
 }
 
@@ -175,7 +207,20 @@ function setExerciseDraft(slug: string, exercicioIdx: number, texto: string) {
 
 function adicionarXp(quantidade: number) {
   if (quantidade <= 0) return;
-  persist(KEYS.xp, getSnapshot().xp + quantidade);
+  const data = getSnapshot();
+  const hoje = dataLocal();
+  const antes = data.xpPorDia[hoje] ?? 0;
+  const depois = antes + quantidade;
+  persist(KEYS.xp, data.xp + quantidade);
+  persist(KEYS.xpPorDia, { ...data.xpPorDia, [hoje]: depois });
+  if (antes < data.metaDiaria && depois >= data.metaDiaria) {
+    persist(KEYS.metasBatidas, [...data.metasBatidas.filter((d) => d !== hoje), hoje]);
+    celebrar({ tipo: "meta", xpHoje: depois, meta: data.metaDiaria });
+  }
+}
+
+function setMetaDiaria(meta: number) {
+  if (METAS_DIARIAS.includes(meta)) persist(KEYS.metaDiaria, meta);
 }
 
 function setSom(value: boolean) {
@@ -210,6 +255,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     adicionarXp,
     som: data.som,
     setSom,
+    xpHoje: data.xpPorDia[data.hoje] ?? 0,
+    xpPorDia: data.xpPorDia,
+    metaDiaria: data.metaDiaria,
+    setMetaDiaria,
+    metasBatidas: data.metasBatidas,
     resetarProgresso,
   };
 

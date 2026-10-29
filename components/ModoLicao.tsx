@@ -78,7 +78,7 @@ export default function ModoLicao({
   onFechar: () => void;
 }) {
   const pathname = usePathname();
-  const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom } = useProgress();
+  const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom, xpHoje, metaDiaria } = useProgress();
   const telaLarga = useMediaQuery("(min-width: 992px)");
   const movimentoReduzido = useMovimentoReduzido();
   const [estado, setEstado] = useState(() => iniciarLicao(cards, Math.random));
@@ -396,6 +396,23 @@ export default function ModoLicao({
                     <div
                       className="licao-progresso-barra"
                       style={{ width: `${Math.min(100, (nivel.xpNoNivel / nivel.xpParaProximo) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="licao-nivel">
+                  <div className="d-flex justify-content-between small mb-1">
+                    <span className="fw-semibold">
+                      <i className="bi bi-bullseye me-1" />
+                      Meta de hoje
+                    </span>
+                    <span className="text-body-secondary">
+                      {xpHoje >= metaDiaria ? "cumprida!" : `faltam ${metaDiaria - xpHoje} XP`} · {xpHoje}/{metaDiaria}
+                    </span>
+                  </div>
+                  <div className="licao-progresso">
+                    <div
+                      className="licao-progresso-barra licao-progresso-meta"
+                      style={{ width: `${Math.min(100, (xpHoje / metaDiaria) * 100)}%` }}
                     />
                   </div>
                 </div>

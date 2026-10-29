@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useProgress } from "@/lib/progress-context";
+import { Fragment, useState } from "react";
+import { METAS_DIARIAS, useProgress } from "@/lib/progress-context";
 import { calcularNivel } from "@/lib/xp";
 
 export default function ConfiguracoesClient() {
@@ -11,6 +11,9 @@ export default function ConfiguracoesClient() {
     setUnlockAll,
     som,
     setSom,
+    metaDiaria,
+    setMetaDiaria,
+    xpHoje,
     resetarProgresso,
     completedSlugs,
     studyDates,
@@ -74,6 +77,35 @@ export default function ConfiguracoesClient() {
 
       <div className="card mb-4">
         <div className="card-body">
+          <h2 className="h6 fw-semibold mb-3" id="meta-diaria-titulo">
+            Meta diária
+          </h2>
+          <div className="btn-group flex-wrap" role="radiogroup" aria-labelledby="meta-diaria-titulo">
+            {METAS_DIARIAS.map((meta) => (
+              <Fragment key={meta}>
+                <input
+                  type="radio"
+                  className="btn-check"
+                  name="metaDiaria"
+                  id={`meta-${meta}`}
+                  checked={hidratado && metaDiaria === meta}
+                  onChange={() => setMetaDiaria(meta)}
+                />
+                <label className="btn btn-outline-primary" htmlFor={`meta-${meta}`}>
+                  {meta} XP
+                </label>
+              </Fragment>
+            ))}
+          </div>
+          <p className="text-body-secondary small mb-0 mt-2">
+            Quanto XP você quer fazer por dia. Cada acerto no modo lição vale 10 XP (mais com combo).
+            Hoje: {hidratado ? xpHoje : 0}/{metaDiaria} XP.
+          </p>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-body">
           <h2 className="h6 fw-semibold mb-3">Seu progresso</h2>
           <ul className="list-unstyled small text-body-secondary mb-0">
             <li className="mb-1">
@@ -101,7 +133,7 @@ export default function ConfiguracoesClient() {
           <h2 className="h6 fw-semibold mb-3 text-danger">Zona de risco</h2>
           <p className="text-body-secondary small">
             Isso apaga todo o progresso salvo neste navegador: aulas concluídas, respostas de quiz,
-            rascunhos de exercícios, XP e streak. Não pode ser desfeito.
+            rascunhos de exercícios, XP, histórico da meta diária e streak. Não pode ser desfeito.
           </p>
           {!confirmando ? (
             <button className="btn btn-outline-danger" onClick={() => setConfirmando(true)}>

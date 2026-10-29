@@ -6,7 +6,10 @@ import { calcularNivel } from "@/lib/xp";
 import BuscaAulas from "./BuscaAulas";
 
 export default function Navbar() {
-  const { streak, xp } = useProgress();
+  const { streak, xp, xpHoje, metaDiaria } = useProgress();
+  const progressoMeta = Math.min(100, (xpHoje / metaDiaria) * 100);
+  const metaBatida = xpHoje >= metaDiaria;
+  const textoStreak = `${streak} ${streak === 1 ? "dia" : "dias"}`;
   const nivel = calcularNivel(xp);
   const progressoNivel = Math.min(100, (nivel.xpNoNivel / nivel.xpParaProximo) * 100);
 
@@ -39,9 +42,28 @@ export default function Navbar() {
             <i className="bi bi-translate" />
             Linguagens
           </Link>
-          <span className="badge text-bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-1 px-2 py-2">
-            <i className="bi bi-fire" />
-            {streak} {streak === 1 ? "dia" : "dias"}
+          <span
+            className={`badge text-bg-warning-subtle text-warning-emphasis navbar-streak d-flex align-items-center gap-1 ps-1 pe-2 py-1 ${metaBatida ? "navbar-meta-batida" : ""}`}
+            title={`Meta de hoje: ${xpHoje}/${metaDiaria} XP · sequência de ${textoStreak}`}
+          >
+            <span className="navbar-meta-anel">
+              <svg viewBox="0 0 36 36" aria-hidden="true">
+                <circle cx="18" cy="18" r="15" className="navbar-meta-trilho" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15"
+                  pathLength={100}
+                  strokeDasharray={`${progressoMeta} 100`}
+                  className="navbar-meta-progresso"
+                />
+              </svg>
+              <i className={`bi ${metaBatida ? "bi-check-lg" : "bi-fire"}`} aria-hidden="true" />
+            </span>
+            <span className="visually-hidden">
+              Meta de hoje: {Math.min(xpHoje, metaDiaria)} de {metaDiaria} XP. Sequência:
+            </span>
+            {textoStreak}
           </span>
           <span
             className="badge navbar-xp d-flex align-items-center gap-1 px-2 py-2"

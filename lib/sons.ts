@@ -1,4 +1,4 @@
-export type Som = "acerto" | "erro" | "combo" | "fim";
+export type Som = "acerto" | "erro" | "combo" | "fim" | "meta" | "conquista";
 
 let contexto: AudioContext | null = null;
 
@@ -51,6 +51,15 @@ export function tocarSom(som: Som) {
     case "fim":
       [523.25, 659.25, 783.99].forEach((freq, i) => nota(ctx, freq, t + i * 0.12, 0.2));
       [1046.5, 1318.51, 1567.98].forEach((freq) => nota(ctx, freq, t + 0.38, 0.7, { volume: 0.09 }));
+      break;
+    case "meta":
+      [783.99, 1046.5, 1318.51, 1567.98].forEach((freq, i) => nota(ctx, freq, t + i * 0.08, 0.22, { volume: 0.12 }));
+      nota(ctx, 2093, t + 0.34, 0.45, { tipo: "sine", volume: 0.06 });
+      break;
+    case "conquista":
+      nota(ctx, 523.25, t, 0.16);
+      nota(ctx, 783.99, t + 0.14, 0.16);
+      [1046.5, 1318.51, 1567.98, 2093].forEach((freq) => nota(ctx, freq, t + 0.3, 0.8, { volume: 0.07 }));
       break;
   }
 }
