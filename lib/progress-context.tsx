@@ -230,13 +230,24 @@ function adicionarXp(quantidade: number) {
   persist(KEYS.xp, data.xp + quantidade);
   persist(KEYS.xpPorDia, { ...data.xpPorDia, [hoje]: depois });
   if (antes < data.metaDiaria && depois >= data.metaDiaria) {
-    persist(KEYS.metasBatidas, [...data.metasBatidas.filter((d) => d !== hoje), hoje]);
-    celebrar({ tipo: "meta", xpHoje: depois, meta: data.metaDiaria });
+    registrarMetaBatida(data.metasBatidas, hoje, depois, data.metaDiaria);
   }
 }
 
+function registrarMetaBatida(metasBatidas: string[], hoje: string, xpHoje: number, meta: number) {
+  if (metasBatidas.includes(hoje)) return;
+  persist(KEYS.metasBatidas, [...metasBatidas, hoje]);
+  celebrar({ tipo: "meta", xpHoje, meta });
+}
+
+// Baixar a meta para um valor que o XP de hoje já alcança também conta o dia como meta batida
 function setMetaDiaria(meta: number) {
-  if (METAS_DIARIAS.includes(meta)) persist(KEYS.metaDiaria, meta);
+  if (!METAS_DIARIAS.includes(meta)) return;
+  persist(KEYS.metaDiaria, meta);
+  const data = getSnapshot();
+  const hoje = dataLocal();
+  const xpHoje = data.xpPorDia[hoje] ?? 0;
+  if (xpHoje >= meta) registrarMetaBatida(data.metasBatidas, hoje, xpHoje, meta);
 }
 
 function setSom(value: boolean) {
