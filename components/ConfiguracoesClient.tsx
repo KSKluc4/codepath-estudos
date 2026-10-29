@@ -5,8 +5,18 @@ import { useProgress } from "@/lib/progress-context";
 import { calcularNivel } from "@/lib/xp";
 
 export default function ConfiguracoesClient() {
-  const { hidratado, unlockAll, setUnlockAll, resetarProgresso, completedSlugs, studyDates, streak, xp } =
-    useProgress();
+  const {
+    hidratado,
+    unlockAll,
+    setUnlockAll,
+    som,
+    setSom,
+    resetarProgresso,
+    completedSlugs,
+    studyDates,
+    streak,
+    xp,
+  } = useProgress();
   const [confirmando, setConfirmando] = useState(false);
 
   return (
@@ -35,6 +45,29 @@ export default function ConfiguracoesClient() {
           <p className="text-body-secondary small mb-0 mt-2">
             Por padrão, cada aula só é liberada quando você conclui a anterior. Ative esta opção se
             quiser navegar livremente pelo currículo, fora de ordem.
+          </p>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-body">
+          <h2 className="h6 fw-semibold mb-3">Modo lição</h2>
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="somSwitch"
+              checked={hidratado && som}
+              onChange={(e) => setSom(e.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="somSwitch">
+              Efeitos sonoros
+            </label>
+          </div>
+          <p className="text-body-secondary small mb-0 mt-2">
+            Sons curtos de acerto, erro, combo e fim de lição. Também dá para ligar e desligar pelo
+            botão de som dentro da lição.
           </p>
         </div>
       </div>

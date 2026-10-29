@@ -9,6 +9,8 @@ import { useMediaQuery, useMovimentoReduzido } from "@/lib/useMediaQuery";
 import { setModoLicaoAberto } from "@/lib/modo-licao";
 import { calcularNivel } from "@/lib/xp";
 import { FALAS, sortearFala } from "@/lib/bit-falas";
+import { Som, tocarSom } from "@/lib/sons";
+import { dispararConfete } from "@/lib/confete";
 import { BitEstado, MASCOTE_NOME } from "@/lib/mascote";
 import {
   CardLicao,
@@ -184,7 +186,7 @@ export default function ModoLicao({
   onFechar: () => void;
 }) {
   const pathname = usePathname();
-  const { xp: xpTotal, marcarConcluida, adicionarXp } = useProgress();
+  const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom } = useProgress();
   const telaLarga = useMediaQuery("(min-width: 992px)");
   const movimentoReduzido = useMovimentoReduzido();
   const [estado, setEstado] = useState(estadoInicial);
@@ -224,6 +226,10 @@ export default function ModoLicao({
     corpoRef.current?.scrollTo({ top: 0 });
     cardRef.current?.focus({ preventScroll: true });
   }, [estado.posicao, tentativa]);
+
+  const tocar = (efeito: Som) => {
+    if (som) tocarSom(efeito);
+  };
 
   const falar = (texto: string) => {
     setFala((atual) => ({ texto, id: atual.id + 1 }));
@@ -282,9 +288,23 @@ export default function ModoLicao({
     if (proximo === estado) return;
     setEstado(proximo);
     if (proximo.acertou) {
+      const subiuMultiplicador = multiplicadorCombo(proximo.combo) > multiplicadorCombo(estado.combo);
+      tocar(subiuMultiplicador ? "combo" : "acerto");
+      if (subiuMultiplicador) {
+        const card = cardRef.current?.getBoundingClientRect();
+        if (card) {
+          dispararConfete({
+            x: (card.right - 60) / window.innerWidth,
+            y: card.top / window.innerHeight,
+            quantidade: 40,
+            forca: 0.6,
+          });
+        }
+      }
       setReacao((r) => r + 1);
       falar(proximo.combo >= 3 ? sortearFala(FALAS.combo, proximo.combo) : sortearFala(FALAS.acerto));
     } else {
+      tocar("erro");
       falar(sortearFala(proximo.vidas === 1 ? FALAS.ultimaVida : FALAS.erro));
     }
   };
@@ -296,6 +316,10 @@ export default function ModoLicao({
     setEstado(proximo);
     if (proximo.fase === "fim") {
       setReacao((r) => r + 1);
+      tocar("fim");
+      dispararConfete({ x: 0.5, y: 0.35, quantidade: 140, abertura: Math.PI * 1.6 });
+      dispararConfete({ x: 0, y: 0.9, angulo: -Math.PI / 3, abertura: 0.6, quantidade: 70, forca: 1.4 });
+      dispararConfete({ x: 1, y: 0.9, angulo: (-2 * Math.PI) / 3, abertura: 0.6, quantidade: 70, forca: 1.4 });
       const nivelAntes = calcularNivel(xpTotal).nivel;
       const nivelDepois = calcularNivel(xpTotal + proximo.xp).nivel;
       setNivelAlcancado(nivelDepois > nivelAntes ? nivelDepois : null);
@@ -399,6 +423,20 @@ export default function ModoLicao({
             <i key={i} className={`bi ${i < estado.vidas ? "bi-heart-fill" : "bi-heart licao-vida-perdida"}`} />
           ))}
         </div>
+        <button
+          type="button"
+          className="licao-btn-icone"
+          onClick={(e) => {
+            setSom(!som);
+            // Clique com mouse não deve "prender" o Enter neste botão (Enter = continuar)
+            if (e.detail > 0) e.currentTarget.blur();
+          }}
+          aria-pressed={som}
+          aria-label={som ? "Desligar sons" : "Ligar sons"}
+          title={som ? "Desligar sons" : "Ligar sons"}
+        >
+          <i className={`bi ${som ? "bi-volume-up-fill" : "bi-volume-mute-fill"}`} />
+        </button>
       </header>
 
       <div className="licao-corpo" ref={corpoRef}>

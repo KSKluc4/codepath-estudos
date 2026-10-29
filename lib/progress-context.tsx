@@ -15,6 +15,7 @@ const KEYS = {
   quizAnswers: "codepath.quizAnswers",
   exerciseDrafts: "codepath.exerciseDrafts",
   xp: "codepath.xp",
+  som: "codepath.som",
 };
 
 type QuizAnswers = Record<string, Record<number, number>>;
@@ -28,6 +29,7 @@ interface ProgressData {
   quizAnswers: QuizAnswers;
   exerciseDrafts: ExerciseDrafts;
   xp: number;
+  som: boolean;
 }
 
 const SERVER_SNAPSHOT: ProgressData = {
@@ -38,6 +40,7 @@ const SERVER_SNAPSHOT: ProgressData = {
   quizAnswers: {},
   exerciseDrafts: {},
   xp: 0,
+  som: true,
 };
 
 function readJson<T>(key: string, fallback: T): T {
@@ -60,6 +63,7 @@ function computeSnapshot(): ProgressData {
     quizAnswers: readJson<QuizAnswers>(KEYS.quizAnswers, {}),
     exerciseDrafts: readJson<ExerciseDrafts>(KEYS.exerciseDrafts, {}),
     xp: readJson<number>(KEYS.xp, 0),
+    som: readJson<boolean>(KEYS.som, true),
   };
 }
 
@@ -125,6 +129,8 @@ interface ProgressContextValue {
   setExerciseDraft: (slug: string, exercicioIdx: number, texto: string) => void;
   xp: number;
   adicionarXp: (quantidade: number) => void;
+  som: boolean;
+  setSom: (value: boolean) => void;
   resetarProgresso: () => void;
 }
 
@@ -172,6 +178,10 @@ function adicionarXp(quantidade: number) {
   persist(KEYS.xp, getSnapshot().xp + quantidade);
 }
 
+function setSom(value: boolean) {
+  persist(KEYS.som, value);
+}
+
 function resetarProgresso() {
   Object.values(KEYS).forEach((key) => window.localStorage.removeItem(key));
   invalidateAndNotify();
@@ -198,6 +208,8 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     setExerciseDraft,
     xp: data.xp,
     adicionarXp,
+    som: data.som,
+    setSom,
     resetarProgresso,
   };
 
