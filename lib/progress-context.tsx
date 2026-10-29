@@ -8,6 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { celebrar } from "./celebracoes";
+import { Estatisticas } from "./conquistas";
 
 const KEYS = {
   completed: "codepath.completed",
@@ -20,7 +21,11 @@ const KEYS = {
   xpPorDia: "codepath.xpPorDia",
   metaDiaria: "codepath.metaDiaria",
   metasBatidas: "codepath.metasBatidas",
+  estatisticas: "codepath.estatisticas",
+  conquistas: "codepath.conquistas",
 };
+
+const ESTATISTICAS_VAZIAS: Estatisticas = { licoesFeitas: 0, licoesPerfeitas: 0, maiorCombo: 0, explicacoes: 0 };
 
 export const METAS_DIARIAS = [10, 20, 30, 50];
 const META_PADRAO = 20;
@@ -41,6 +46,8 @@ interface ProgressData {
   metaDiaria: number;
   metasBatidas: string[];
   hoje: string;
+  estatisticas: Estatisticas;
+  conquistas: Record<string, string>;
 }
 
 const SERVER_SNAPSHOT: ProgressData = {
@@ -56,6 +63,8 @@ const SERVER_SNAPSHOT: ProgressData = {
   metaDiaria: META_PADRAO,
   metasBatidas: [],
   hoje: "",
+  estatisticas: ESTATISTICAS_VAZIAS,
+  conquistas: {},
 };
 
 // YYYY-MM-DD no fuso do aluno (toISOString usaria UTC e viraria o dia às 21h no Brasil)
@@ -91,6 +100,8 @@ function computeSnapshot(): ProgressData {
     metaDiaria: METAS_DIARIAS.includes(meta) ? meta : META_PADRAO,
     metasBatidas: readJson<string[]>(KEYS.metasBatidas, []),
     hoje: dataLocal(),
+    estatisticas: { ...ESTATISTICAS_VAZIAS, ...readJson<Partial<Estatisticas>>(KEYS.estatisticas, {}) },
+    conquistas: readJson<Record<string, string>>(KEYS.conquistas, {}),
   };
 }
 
@@ -163,6 +174,11 @@ interface ProgressContextValue {
   metaDiaria: number;
   setMetaDiaria: (meta: number) => void;
   metasBatidas: string[];
+  estatisticas: Estatisticas;
+  registrarLicao: (resultado: { respostas: number; acertos: number; comboMax: number }) => void;
+  registrarExplicacao: () => void;
+  conquistas: Record<string, string>;
+  desbloquearConquistas: (ids: string[]) => void;
   resetarProgresso: () => void;
 }
 
@@ -227,6 +243,30 @@ function setSom(value: boolean) {
   persist(KEYS.som, value);
 }
 
+function registrarLicao({ respostas, acertos, comboMax }: { respostas: number; acertos: number; comboMax: number }) {
+  const { estatisticas } = getSnapshot();
+  persist(KEYS.estatisticas, {
+    ...estatisticas,
+    licoesFeitas: estatisticas.licoesFeitas + 1,
+    licoesPerfeitas: estatisticas.licoesPerfeitas + (respostas > 0 && acertos === respostas ? 1 : 0),
+    maiorCombo: Math.max(estatisticas.maiorCombo, comboMax),
+  });
+}
+
+function registrarExplicacao() {
+  const { estatisticas } = getSnapshot();
+  persist(KEYS.estatisticas, { ...estatisticas, explicacoes: estatisticas.explicacoes + 1 });
+}
+
+function desbloquearConquistas(ids: string[]) {
+  const { conquistas } = getSnapshot();
+  const novas = ids.filter((id) => !conquistas[id]);
+  if (novas.length === 0) return;
+  const agora = new Date().toISOString();
+  persist(KEYS.conquistas, { ...conquistas, ...Object.fromEntries(novas.map((id) => [id, agora])) });
+  novas.forEach((id) => celebrar({ tipo: "conquista", conquistaId: id }));
+}
+
 function resetarProgresso() {
   Object.values(KEYS).forEach((key) => window.localStorage.removeItem(key));
   invalidateAndNotify();
@@ -260,6 +300,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     metaDiaria: data.metaDiaria,
     setMetaDiaria,
     metasBatidas: data.metasBatidas,
+    estatisticas: data.estatisticas,
+    registrarLicao,
+    registrarExplicacao,
+    conquistas: data.conquistas,
+    desbloquearConquistas,
     resetarProgresso,
   };
 

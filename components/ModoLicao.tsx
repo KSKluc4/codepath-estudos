@@ -78,7 +78,17 @@ export default function ModoLicao({
   onFechar: () => void;
 }) {
   const pathname = usePathname();
-  const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom, xpHoje, metaDiaria } = useProgress();
+  const {
+    xp: xpTotal,
+    marcarConcluida,
+    adicionarXp,
+    som,
+    setSom,
+    xpHoje,
+    metaDiaria,
+    registrarLicao,
+    registrarExplicacao,
+  } = useProgress();
   const telaLarga = useMediaQuery("(min-width: 992px)");
   const movimentoReduzido = useMovimentoReduzido();
   const [estado, setEstado] = useState(() => iniciarLicao(cards, Math.random));
@@ -138,6 +148,7 @@ export default function ModoLicao({
     if (item?.card.tipo !== "pergunta" || estado.selecionada === null || explicacao) return;
     const controle = new AbortController();
     pedidoRef.current = controle;
+    registrarExplicacao();
     setExplicacao({ status: "pensando", texto: "" });
     zyreRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
 
@@ -219,6 +230,7 @@ export default function ModoLicao({
       const nivelDepois = calcularNivel(xpTotal + proximo.xp).nivel;
       setNivelAlcancado(nivelDepois > nivelAntes ? nivelDepois : null);
       marcarConcluida(slug);
+      registrarLicao(proximo);
       adicionarXp(proximo.xp);
       falar(sortearFala(FALAS.fim));
     } else if (proximo.fase === "sem-vidas") {

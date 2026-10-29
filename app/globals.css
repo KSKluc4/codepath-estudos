@@ -1920,3 +1920,117 @@ main.flex-grow-1 {
   from { opacity: 0; transform: translateY(-24px) scale(0.92); }
   to { opacity: 1; transform: none; }
 }
+
+/* ---------- Conquistas ---------- */
+
+.sidebar-trofeu {
+  color: #f8d35e;
+}
+
+.conquistas-resumo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 1rem;
+  background: radial-gradient(circle at 0% 50%, rgba(248, 211, 94, 0.1), transparent 55%), #10161e;
+}
+
+.conquistas-resumo-zyre {
+  flex-shrink: 0;
+  width: 64px;
+  height: 72px;
+}
+
+.conquistas-barra {
+  background: linear-gradient(90deg, #f59e0b, #f8d35e);
+}
+
+.conquistas-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conquista {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1rem 1rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 1rem;
+  background-color: #10161e;
+  text-align: center;
+}
+
+.conquista-feita {
+  border-color: rgba(248, 211, 94, 0.35);
+}
+
+.conquista-medalha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  font-size: 2rem;
+}
+
+.conquista-feita .conquista-medalha {
+  background: radial-gradient(circle at 35% 30%, #fff3c4, #f8d35e 45%, #e39b0b);
+  box-shadow: 0 0 0 4px rgba(248, 211, 94, 0.18), 0 6px 0 #a86b05;
+  color: #4a2c00;
+}
+
+.conquista-bloqueada .conquista-medalha {
+  background-color: #1a2129;
+  box-shadow: 0 6px 0 #0d1217;
+  color: #4b5865;
+}
+
+.conquista-titulo {
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.conquista-bloqueada .conquista-titulo {
+  color: var(--bs-secondary-color);
+}
+
+.conquista-descricao {
+  flex-grow: 1;
+  margin-bottom: 0.75rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.85rem;
+}
+
+.conquista-data {
+  color: #f8d35e;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.conquista-progresso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  color: var(--bs-secondary-color);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.conquista-progresso .progress {
+  height: 6px;
+}
+
+.conquista-progresso .progress-bar {
+  background-color: var(--codepath-accent);
+}

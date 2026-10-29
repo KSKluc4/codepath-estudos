@@ -2,12 +2,14 @@
 
 import { useEffect, useEffectEvent } from "react";
 import { Celebracao, dispensar, useCelebracoes } from "@/lib/celebracoes";
+import { CONQUISTAS, conquistaCumprida, getConquista } from "@/lib/conquistas";
+import { useDadosConquistas } from "@/lib/useDadosConquistas";
 import { useProgress } from "@/lib/progress-context";
 import { tocarSom } from "@/lib/sons";
 import { dispararConfete } from "@/lib/confete";
 import ZyreSvg from "./ZyreSvg";
 
-const DURACAO_MS = 5200;
+const DURACAO_MS = 4800;
 
 function Conteudo({ celebracao, streak }: { celebracao: Celebracao; streak: number }) {
   if (celebracao.tipo === "meta") {
@@ -21,13 +23,34 @@ function Conteudo({ celebracao, streak }: { celebracao: Celebracao; streak: numb
       </>
     );
   }
-  return null;
+  const conquista = getConquista(celebracao.conquistaId);
+  if (!conquista) return null;
+  return (
+    <>
+      <div className="celebracao-titulo">
+        <i className={`bi ${conquista.icone} me-1`} aria-hidden="true" />
+        Conquista desbloqueada!
+      </div>
+      <div className="celebracao-texto">
+        <strong className="text-body">{conquista.titulo}</strong> · {conquista.descricao}
+      </div>
+    </>
+  );
 }
 
 export default function Celebracoes() {
   const fila = useCelebracoes();
-  const { som, streak } = useProgress();
+  const { som, streak, hidratado, conquistas, desbloquearConquistas } = useProgress();
+  const dados = useDadosConquistas();
   const atual = fila[0];
+
+  // Confere as conquistas sempre que o progresso muda (fim de lição, meta batida,
+  // aula marcada como concluída no modo leitura...)
+  useEffect(() => {
+    if (!hidratado) return;
+    const cumpridas = CONQUISTAS.filter((c) => !conquistas[c.id] && conquistaCumprida(c, dados)).map((c) => c.id);
+    desbloquearConquistas(cumpridas);
+  }, [hidratado, dados, conquistas, desbloquearConquistas]);
 
   const anunciar = useEffectEvent((celebracao: Celebracao) => {
     if (som) tocarSom(celebracao.tipo);
