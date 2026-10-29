@@ -32,6 +32,7 @@ export const FALAS = {
     "Respira, lê a explicação e segue.",
   ],
   ultimaVida: ["Última vida! Vai com calma agora.", "Ei, só sobrou uma vida. Lê tudo com atenção."],
+  ultimoErro: ["Ih, essa era a última vida. Lê a explicação com calma."],
   semVidas: [
     "Acabaram as vidas, mas o aprendizado ficou. Bora de novo?",
     "Faz parte! Na segunda tentativa vai ser mais fácil.",
