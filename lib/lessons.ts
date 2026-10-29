@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { Lesson, LessonFrontmatter, LessonSummary } from "./types";
 import { parseLessonBody } from "./markdown";
+import { gerarExerciciosCodigo } from "./exercicios-codigo";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "aulas");
 
@@ -39,6 +40,7 @@ export function getAllLessons(): Lesson[] {
       slug: slugFromFrontmatter(fm),
       introHtml: body.introHtml,
       secoes: body.secoes,
+      exerciciosCodigo: gerarExerciciosCodigo(body.blocosCodigo, slugFromFrontmatter(fm)),
       exercicios: body.exercicios,
       quiz: body.quiz,
       duvidaHtml: body.duvidaHtml,

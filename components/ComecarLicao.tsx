@@ -1,11 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useMemo, useRef } from "react";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "@/lib/types";
-import { EstadoLicao, VIDAS_POR_LICAO, iniciarLicao, montarCards } from "@/lib/licao";
-import BitSvg from "./BitSvg";
-import { precarregarBit3D } from "./BitMascote";
+import { ExercicioCodigo } from "@/lib/exercicios-codigo";
+import { VIDAS_POR_LICAO, montarCards } from "@/lib/licao";
+import ZyreSvg from "./ZyreSvg";
+import { precarregarZyre3D } from "./ZyreMascote";
 import type { ProximaEtapa } from "./ModoLicao";
 
 const ModoLicao = dynamic(() => import("./ModoLicao"), {
@@ -21,7 +23,7 @@ const ModoLicao = dynamic(() => import("./ModoLicao"), {
 
 function precarregar() {
   void import("./ModoLicao");
-  precarregarBit3D();
+  precarregarZyre3D();
 }
 
 export default function ComecarLicao({
@@ -30,6 +32,7 @@ export default function ComecarLicao({
   secoes,
   quiz,
   exercicios,
+  exerciciosCodigo,
   proxima,
 }: {
   slug: string;
@@ -37,33 +40,58 @@ export default function ComecarLicao({
   secoes: SecaoConteudo[];
   quiz: QuizPergunta[];
   exercicios: Exercicio[];
+  exerciciosCodigo: ExercicioCodigo[];
   proxima?: ProximaEtapa;
 }) {
-  const cards = useMemo(() => montarCards(secoes, quiz, exercicios), [secoes, quiz, exercicios]);
-  const [estadoInicial, setEstadoInicial] = useState<EstadoLicao | null>(null);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const cards = useMemo(
+    () => montarCards(secoes, quiz, exercicios, exerciciosCodigo),
+    [secoes, quiz, exercicios, exerciciosCodigo]
+  );
+  const abriuPeloBotao = useRef(false);
 
   if (cards.length === 0) return null;
 
+  // O modo lição fica na URL (?licao=1): o mapa abre direto nele e o "voltar" do
+  // navegador fecha a lição
+  const aberto = searchParams.get("licao") === "1";
+
+  const abrir = () => {
+    abriuPeloBotao.current = true;
+    window.history.pushState(null, "", `${pathname}?licao=1`);
+  };
+
+  const fechar = () => {
+    if (abriuPeloBotao.current) {
+      abriuPeloBotao.current = false;
+      window.history.back();
+    } else {
+      window.history.replaceState(null, "", pathname);
+    }
+  };
+
   const conceitos = cards.filter((c) => c.tipo === "conceito").length;
   const perguntas = cards.filter((c) => c.tipo === "pergunta").length;
+  const deCodigo = cards.filter((c) => c.tipo === "montar" || c.tipo === "lacuna").length;
 
   return (
     <>
       <div className="licao-cta mb-4">
-        <span className="licao-cta-bit">
-          <BitSvg />
+        <span className="licao-cta-zyre">
+          <ZyreSvg />
         </span>
         <div className="flex-grow-1 min-w-0">
           <div className="fw-bold">Estude no modo lição</div>
           <div className="small text-body-secondary">
-            {conceitos} cards curtos · {perguntas} {perguntas === 1 ? "pergunta" : "perguntas"} ·{" "}
-            {VIDAS_POR_LICAO} vidas
+            {conceitos} cards curtos · {perguntas} {perguntas === 1 ? "pergunta" : "perguntas"}
+            {deCodigo > 0 && ` · ${deCodigo} de código`} · {VIDAS_POR_LICAO} vidas
           </div>
         </div>
         <button
           type="button"
           className="btn btn-licao btn-lg"
-          onClick={() => setEstadoInicial(iniciarLicao(cards, Math.random))}
+          onClick={abrir}
           onPointerEnter={precarregar}
           onFocus={precarregar}
         >
@@ -72,14 +100,13 @@ export default function ComecarLicao({
         </button>
       </div>
 
-      {estadoInicial && (
+      {aberto && (
         <ModoLicao
           slug={slug}
           titulo={titulo}
           cards={cards}
-          estadoInicial={estadoInicial}
           proxima={proxima}
-          onFechar={() => setEstadoInicial(null)}
+          onFechar={fechar}
         />
       )}
     </>

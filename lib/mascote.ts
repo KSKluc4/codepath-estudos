@@ -1,3 +1,3 @@
-export const MASCOTE_NOME = "Bit";
+export const MASCOTE_NOME = "Zyre";
 
-export type BitEstado = "idle" | "falando" | "pensando" | "comemorando" | "triste" | "olhando";
+export type ZyreEstado = "idle" | "falando" | "pensando" | "comemorando" | "triste" | "olhando";

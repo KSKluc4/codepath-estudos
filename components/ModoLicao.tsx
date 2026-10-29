@@ -8,27 +8,32 @@ import { useProgress } from "@/lib/progress-context";
 import { useMediaQuery, useMovimentoReduzido } from "@/lib/useMediaQuery";
 import { setModoLicaoAberto } from "@/lib/modo-licao";
 import { calcularNivel } from "@/lib/xp";
-import { FALAS, sortearFala } from "@/lib/bit-falas";
+import { FALAS, sortearFala } from "@/lib/zyre-falas";
 import { Som, tocarSom } from "@/lib/sons";
 import { dispararConfete } from "@/lib/confete";
-import { BitEstado, MASCOTE_NOME } from "@/lib/mascote";
+import { ZyreEstado, MASCOTE_NOME } from "@/lib/mascote";
 import {
   CardLicao,
   EstadoLicao,
   ItemFila,
   VIDAS_POR_LICAO,
   XP_POR_ACERTO,
+  colocarLinha,
   continuar,
+  ehPontuado,
   iniciarLicao,
   itemAtual,
+  moverLinha,
   multiplicadorCombo,
+  podeVerificar,
   precisao,
+  retirarLinha,
   revelarSolucao,
   selecionarOpcao,
   verificarResposta,
 } from "@/lib/licao";
-import BitMascote from "./BitMascote";
-import { CardConceito, CardDesafio, CardPergunta } from "./LicaoCards";
+import ZyreMascote from "./ZyreMascote";
+import { CardConceito, CardDesafio, CardLacuna, CardMontar, CardPergunta } from "./LicaoCards";
 
 export interface ProximaEtapa {
   href: string;
@@ -49,41 +54,52 @@ const MSG_SEM_EXPLICACAO = `O ${MASCOTE_NOME} não conseguiu responder agora. Le
 
 function falaDoCard(item: ItemFila | undefined): string {
   if (!item) return "";
-  if (item.card.tipo === "pergunta") return sortearFala(item.repeticao ? FALAS.repeticao : FALAS.pergunta);
+  if (ehPontuado(item.card) && item.repeticao) return sortearFala(FALAS.repeticao);
+  if (item.card.tipo === "pergunta") return sortearFala(FALAS.pergunta);
+  if (item.card.tipo === "montar") return sortearFala(FALAS.montar);
+  if (item.card.tipo === "lacuna") return sortearFala(FALAS.lacuna);
   if (item.card.tipo === "desafio") return sortearFala(FALAS.desafio);
   return Math.random() < 0.4 ? sortearFala(FALAS.conceito) : "";
 }
 
-function estadoDoBit(estado: EstadoLicao, explicacao: Explicacao | null, falando: boolean): BitEstado {
+function estadoDoZyre(estado: EstadoLicao, explicacao: Explicacao | null, falando: boolean): ZyreEstado {
   if (explicacao?.status === "pensando") return "pensando";
   if (explicacao?.status === "escrevendo") return "falando";
   if (estado.fase === "fim") return "comemorando";
   if (estado.fase === "sem-vidas") return "triste";
   if (estado.fase === "feedback") return estado.acertou ? "comemorando" : "triste";
   if (falando) return "falando";
-  return itemAtual(estado)?.card.tipo === "pergunta" ? "olhando" : "idle";
+  return ehPontuado(itemAtual(estado)?.card) ? "olhando" : "idle";
 }
 
 export default function ModoLicao({
   slug,
   titulo,
   cards,
-  estadoInicial,
   proxima,
   onFechar,
 }: {
   slug: string;
   titulo: string;
   cards: CardLicao[];
-  estadoInicial: EstadoLicao;
   proxima?: ProximaEtapa;
   onFechar: () => void;
 }) {
   const pathname = usePathname();
-  const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom } = useProgress();
+  const {
+    xp: xpTotal,
+    marcarConcluida,
+    adicionarXp,
+    som,
+    setSom,
+    xpHoje,
+    metaDiaria,
+    registrarLicao,
+    registrarExplicacao,
+  } = useProgress();
   const telaLarga = useMediaQuery("(min-width: 992px)");
   const movimentoReduzido = useMovimentoReduzido();
-  const [estado, setEstado] = useState(estadoInicial);
+  const [estado, setEstado] = useState(() => iniciarLicao(cards, Math.random));
   const [tentativa, setTentativa] = useState(0);
   const [fala, setFala] = useState<Fala>({ texto: FALAS.inicio[0], id: 0 });
   const [falando, setFalando] = useState(true);
@@ -93,7 +109,7 @@ export default function ModoLicao({
   const [nivelAlcancado, setNivelAlcancado] = useState<number | null>(null);
   const corpoRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
-  const bitRef = useRef<HTMLElement>(null);
+  const zyreRef = useRef<HTMLElement>(null);
   const pedidoRef = useRef<AbortController | null>(null);
 
   const item = itemAtual(estado);
@@ -136,22 +152,33 @@ export default function ModoLicao({
     setExplicacao(null);
   };
 
+  // Só índices vão para o servidor; ele reconstrói pergunta/exercício pelo pathname
+  const corpoExplicacao = () => {
+    const card = item?.card;
+    if (card?.tipo === "pergunta" && estado.selecionada !== null) {
+      return { perguntaIndex: card.indice, opcaoEscolhida: item?.ordemOpcoes[estado.selecionada] };
+    }
+    if (card?.tipo === "lacuna" && estado.selecionada !== null) {
+      return { exercicioIndex: card.indice, resposta: item?.ordemOpcoes[estado.selecionada] };
+    }
+    if (card?.tipo === "montar") return { exercicioIndex: card.indice, resposta: estado.resposta };
+    return null;
+  };
+
   const pedirExplicacao = async () => {
-    if (item?.card.tipo !== "pergunta" || estado.selecionada === null || explicacao) return;
+    const pedido = corpoExplicacao();
+    if (!pedido || explicacao) return;
     const controle = new AbortController();
     pedidoRef.current = controle;
+    registrarExplicacao();
     setExplicacao({ status: "pensando", texto: "" });
-    bitRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
+    zyreRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pathname,
-          perguntaIndex: item.card.indice,
-          opcaoEscolhida: item.ordemOpcoes[estado.selecionada],
-        }),
+        body: JSON.stringify({ pathname, ...pedido }),
         signal: controle.signal,
       });
       if (!res.ok || !res.body) {
@@ -176,6 +203,10 @@ export default function ModoLicao({
   };
 
   const aoSelecionar = (posicao: number) => setEstado(selecionarOpcao(estado, posicao));
+  const aoColocar = (linha: number) => setEstado(colocarLinha(estado, linha));
+  const aoRetirar = (posicao: number) => setEstado(retirarLinha(estado, posicao));
+  const aoMover = (de: number, para: number) => setEstado(moverLinha(estado, de, para));
+  const bancoDeLinhas = item?.card.tipo === "montar" ? item.ordemOpcoes.filter((l) => !estado.resposta.includes(l)) : [];
 
   const aoVerificar = () => {
     const proximo = verificarResposta(estado);
@@ -221,6 +252,7 @@ export default function ModoLicao({
       const nivelDepois = calcularNivel(xpTotal + proximo.xp).nivel;
       setNivelAlcancado(nivelDepois > nivelAntes ? nivelDepois : null);
       marcarConcluida(slug);
+      registrarLicao(proximo);
       adicionarXp(proximo.xp);
       falar(sortearFala(FALAS.fim));
     } else if (proximo.fase === "sem-vidas") {
@@ -244,7 +276,7 @@ export default function ModoLicao({
   };
 
   const acaoPrincipal = () => {
-    if (estado.fase === "feedback" || item?.card.tipo !== "pergunta") aoContinuar();
+    if (estado.fase === "feedback" || !ehPontuado(item?.card)) aoContinuar();
     else aoVerificar();
   };
 
@@ -261,7 +293,17 @@ export default function ModoLicao({
     const alvo = e.target as HTMLElement;
     if (alvo.closest("input, textarea, select, a")) return;
     if (/^[1-9]$/.test(e.key)) {
-      aoSelecionar(Number(e.key) - 1);
+      if (item?.card.tipo === "montar") {
+        const linha = bancoDeLinhas[Number(e.key) - 1];
+        if (linha !== undefined) aoColocar(linha);
+      } else {
+        aoSelecionar(Number(e.key) - 1);
+      }
+      return;
+    }
+    if (e.key === "Backspace" && item?.card.tipo === "montar" && estado.resposta.length > 0) {
+      e.preventDefault();
+      aoRetirar(estado.resposta.length - 1);
       return;
     }
     // Enter em outros botões (ex.: "Ver solução") mantém o clique nativo
@@ -282,6 +324,7 @@ export default function ModoLicao({
   const multiplicador = multiplicadorCombo(estado.combo);
   const pergunta = item?.card.tipo === "pergunta" ? item.card.pergunta : null;
   const opcaoCorreta = pergunta?.opcoes.find((o) => o.correta);
+  const lacuna = item?.card.tipo === "lacuna" ? item.card.exercicio : null;
   const nivel = calcularNivel(xpTotal);
   const taxaAcerto = precisao(estado);
 
@@ -289,7 +332,7 @@ export default function ModoLicao({
   if (estado.fase === "feedback") classeCard += estado.acertou ? " licao-card-certo" : " licao-card-errado";
 
   let rotuloAcao = "Continuar";
-  if (estado.fase === "card" && item?.card.tipo === "pergunta") rotuloAcao = "Verificar";
+  if (estado.fase === "card" && ehPontuado(item?.card)) rotuloAcao = "Verificar";
   if (estado.fase === "card" && item?.card.tipo === "desafio" && !estado.solucaoVisivel) rotuloAcao = "Pular desafio";
 
   let classeRodape = "licao-rodape";
@@ -353,6 +396,17 @@ export default function ModoLicao({
                 {item.card.tipo === "pergunta" && (
                   <CardPergunta item={item} estado={estado} onSelecionar={aoSelecionar} />
                 )}
+                {item.card.tipo === "lacuna" && <CardLacuna item={item} estado={estado} onSelecionar={aoSelecionar} />}
+                {item.card.tipo === "montar" && (
+                  <CardMontar
+                    item={item}
+                    estado={estado}
+                    banco={bancoDeLinhas}
+                    onColocar={aoColocar}
+                    onRetirar={aoRetirar}
+                    onMover={aoMover}
+                  />
+                )}
                 {item.card.tipo === "desafio" && (
                   <CardDesafio
                     card={item.card}
@@ -401,12 +455,29 @@ export default function ModoLicao({
                     />
                   </div>
                 </div>
+                <div className="licao-nivel">
+                  <div className="d-flex justify-content-between small mb-1">
+                    <span className="fw-semibold">
+                      <i className="bi bi-bullseye me-1" />
+                      Meta de hoje
+                    </span>
+                    <span className="text-body-secondary">
+                      {xpHoje >= metaDiaria ? "cumprida!" : `faltam ${metaDiaria - xpHoje} XP`} · {xpHoje}/{metaDiaria}
+                    </span>
+                  </div>
+                  <div className="licao-progresso">
+                    <div
+                      className="licao-progresso-barra licao-progresso-meta"
+                      style={{ width: `${Math.min(100, (xpHoje / metaDiaria) * 100)}%` }}
+                    />
+                  </div>
+                </div>
                 <div className="d-flex flex-wrap justify-content-center gap-2 mt-4">
                   <button type="button" className="btn btn-outline-secondary btn-lg" onClick={onFechar}>
                     Voltar para o conteúdo
                   </button>
                   {proxima && (
-                    <Link href={proxima.href} className="btn btn-licao btn-lg" onClick={onFechar}>
+                    <Link href={proxima.href} replace className="btn btn-licao btn-lg">
                       {proxima.rotulo}
                       <i className="bi bi-arrow-right ms-2" />
                     </Link>
@@ -436,7 +507,7 @@ export default function ModoLicao({
             )}
           </div>
 
-          <aside className="licao-bit" ref={bitRef} aria-live="polite">
+          <aside className="licao-zyre" ref={zyreRef} aria-live="polite">
             {explicacao ? (
               <div className="licao-balao licao-balao-explicacao">
                 {explicacao.status === "pensando" ? (
@@ -456,9 +527,9 @@ export default function ModoLicao({
                 </div>
               )
             )}
-            <div className="licao-bit-figura">
-              <BitMascote
-                estado={estadoDoBit(estado, explicacao, falando)}
+            <div className="licao-zyre-figura">
+              <ZyreMascote
+                estado={estadoDoZyre(estado, explicacao, falando)}
                 intensidade={estado.fase === "fim" ? 3 : multiplicador}
                 gatilho={reacao}
                 olhar={telaLarga ? "esquerda" : "cima"}
@@ -472,7 +543,7 @@ export default function ModoLicao({
         <footer className={classeRodape}>
           <div className="licao-rodape-conteudo">
             <div className="licao-feedback" role="status">
-              {estado.fase === "feedback" && pergunta && (
+              {estado.fase === "feedback" && ehPontuado(item?.card) && (
                 <>
                   <div className="licao-feedback-titulo">
                     <i className={`bi ${estado.acertou ? "bi-check-circle-fill" : "bi-x-circle-fill"}`} />
@@ -486,17 +557,40 @@ export default function ModoLicao({
                       Resposta certa: <span dangerouslySetInnerHTML={{ __html: opcaoCorreta.html }} />
                     </div>
                   )}
-                  {pergunta.explicacaoHtml && (
+                  {pergunta?.explicacaoHtml && (
                     <div
                       className="licao-feedback-explicacao"
                       dangerouslySetInnerHTML={{ __html: pergunta.explicacaoHtml }}
                     />
                   )}
+                  {lacuna && (
+                    <div className="licao-feedback-explicacao">
+                      {!estado.acertou && (
+                        <>
+                          Resposta certa: <code>{lacuna.opcoes[lacuna.correta]}</code> ·{" "}
+                        </>
+                      )}
+                      A linha completa é <code>{lacuna.linhas[lacuna.linha].trim()}</code>
+                    </div>
+                  )}
+                  {item?.card.tipo === "montar" && (
+                    <div className="licao-feedback-explicacao">
+                      {estado.acertou
+                        ? "Cada linha usa algo que a anterior criou ou abriu: é isso que define a ordem."
+                        : "A ordem certa está no card. Repare no que cada linha usa da linha de cima."}
+                    </div>
+                  )}
                 </>
               )}
-              {estado.fase === "card" && item?.card.tipo === "pergunta" && (
+              {estado.fase === "card" && (item?.card.tipo === "pergunta" || item?.card.tipo === "lacuna") && (
                 <span className="licao-dica">
                   Atalhos: <kbd>1</kbd>–<kbd>{item.ordemOpcoes.length}</kbd> escolhem, <kbd>Enter</kbd> verifica
+                </span>
+              )}
+              {estado.fase === "card" && item?.card.tipo === "montar" && (
+                <span className="licao-dica">
+                  Atalhos: números colocam a linha, <kbd>⌫</kbd> desfaz, <kbd>↑</kbd> <kbd>↓</kbd> movem, <kbd>Enter</kbd>{" "}
+                  verifica
                 </span>
               )}
             </div>
@@ -508,7 +602,7 @@ export default function ModoLicao({
                   disabled={explicacao !== null}
                   onClick={pedirExplicacao}
                 >
-                  <i className="bi bi-robot me-2" />
+                  <i className="bi bi-stars me-2" />
                   {MASCOTE_NOME}, me explica
                 </button>
               )}
@@ -516,7 +610,7 @@ export default function ModoLicao({
                 type="button"
                 className={`btn btn-lg ${estado.fase === "feedback" && !estado.acertou ? "btn-licao-errado" : "btn-licao"}`}
                 data-acao-principal
-                disabled={estado.fase === "card" && item?.card.tipo === "pergunta" && estado.selecionada === null}
+                disabled={estado.fase === "card" && ehPontuado(item?.card) && !podeVerificar(estado)}
                 onClick={acaoPrincipal}
               >
                 {rotuloAcao}

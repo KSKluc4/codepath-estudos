@@ -6,12 +6,13 @@ import { NIVEL_LABELS } from "./niveis";
 import { htmlParaTexto } from "./html-texto";
 import { MASCOTE_NOME } from "./mascote";
 import { QuizPergunta } from "./types";
+import { ExercicioCodigo } from "./exercicios-codigo";
 
 const LIMITE_CONTEUDO = 6000;
 const LIMITE_OPCAO = 400;
 const LIMITE_EXPLICACAO = 1200;
 
-const PROMPT_BASE = `Você é o ${MASCOTE_NOME}, o mascote do CodePath: uma plataforma de estudos de programação em português, com um curso de 6 meses (da lógica binária ao projeto final) e trilhas de referência de linguagens.
+const PROMPT_BASE = `Você é o ${MASCOTE_NOME}, o mascote do CodePath: uma pequena raposa-dragão feita de luz, com uma chama na ponta da cauda. O CodePath é uma plataforma de estudos de programação em português, com um curso de 6 meses (da lógica binária ao projeto final) e trilhas de referência de linguagens.
 
 Seu papel é tirar dúvidas de estudantes, como um colega mais experiente que senta do lado e ajuda.
 - Responda sempre em português do Brasil, com tom amigável, paciente e direto.
@@ -90,12 +91,19 @@ export function montarSystemPrompt(pathname: string): string {
   return `${PROMPT_BASE}\n\n${contexto}`;
 }
 
-function quizDoPathname(pathname: string): QuizPergunta[] | undefined {
+function conteudoDoPathname(pathname: string) {
   const { aula, capitulo } = lerPathname(pathname);
-  if (aula) return getLessonBySlug(aula)?.quiz;
-  if (capitulo) return getChapterBySlug(capitulo.trilha, capitulo.capitulo)?.quiz;
+  if (aula) return getLessonBySlug(aula);
+  if (capitulo) return getChapterBySlug(capitulo.trilha, capitulo.capitulo);
   return undefined;
 }
+
+function quizDoPathname(pathname: string): QuizPergunta[] | undefined {
+  return conteudoDoPathname(pathname)?.quiz;
+}
+
+const INSTRUCAO_BALAO =
+  "Sua resposta aparece num balão pequeno ao lado do mascote. Fale direto com o aluno, com tom encorajador. Não use listas, títulos, markdown nem blocos de código.";
 
 // A pergunta e a opção vêm só como índices: o texto é resolvido aqui no servidor,
 // então o cliente não consegue injetar prompt.
@@ -124,7 +132,60 @@ Resposta do aluno: ${htmlParaTexto(escolhida.html, LIMITE_OPCAO)}
 Resposta correta: ${htmlParaTexto(correta.html, LIMITE_OPCAO)}
 Explicação do material: ${htmlParaTexto(pergunta.explicacaoHtml, LIMITE_EXPLICACAO)}
 
-Sua resposta aparece num balão pequeno ao lado do mascote. Em no máximo 3 frases curtas, explique por que a opção que o aluno escolheu está errada (qual confusão provavelmente levou a ela) e o que torna a correta certa. Fale direto com o aluno, com tom encorajador. Não use listas, títulos, markdown nem blocos de código.`;
+Em no máximo 3 frases curtas, explique por que a opção que o aluno escolheu está errada (qual confusão provavelmente levou a ela) e o que torna a correta certa. ${INSTRUCAO_BALAO}`;
 
   return { system, pedido: "Por que a minha resposta está errada?" };
+}
+
+function respostaDeMontar(exercicio: ExercicioCodigo, resposta: unknown): number[] | undefined {
+  const total = exercicio.linhas.length;
+  if (!Array.isArray(resposta) || resposta.length !== total) return undefined;
+  const indices = resposta.filter((i): i is number => Number.isInteger(i) && i >= 0 && i < total);
+  return indices.length === total && new Set(indices).size === total ? indices : undefined;
+}
+
+// Igual à explicação do quiz: o exercício é gerado de novo aqui a partir do conteúdo da
+// aula; do navegador só chegam índices (opção da lacuna ou ordem das linhas)
+export function montarExplicacaoExercicio(
+  pathname: string,
+  exercicioIndex: unknown,
+  resposta: unknown
+): { system: string; pedido: string } | undefined {
+  const exercicios = conteudoDoPathname(pathname)?.exerciciosCodigo;
+  if (!exercicios || !Number.isInteger(exercicioIndex)) return undefined;
+  const exercicio = exercicios[exercicioIndex as number];
+  if (!exercicio) return undefined;
+
+  const codigo = exercicio.linhas.join("\n");
+  let situacao: string;
+  if (exercicio.tipo === "lacuna") {
+    if (!Number.isInteger(resposta) || resposta === exercicio.correta) return undefined;
+    const escolhida = exercicio.opcoes[resposta as number];
+    if (escolhida === undefined) return undefined;
+    const linha = exercicio.linhas[exercicio.linha];
+    situacao = `Exercício "complete a lacuna" (${exercicio.linguagem}). Código:
+${codigo}
+
+Na linha "${linha.slice(0, exercicio.inicio)}____${linha.slice(exercicio.fim)}" o aluno escolheu "${escolhida}", mas o certo é "${exercicio.opcoes[exercicio.correta]}". Opções: ${exercicio.opcoes.join(", ")}.
+
+Em no máximo 3 frases curtas, explique por que "${escolhida}" não serve ali e o que "${exercicio.opcoes[exercicio.correta]}" faz nessa linha.`;
+  } else {
+    const ordem = respostaDeMontar(exercicio, resposta);
+    if (!ordem) return undefined;
+    const montado = ordem.map((i) => exercicio.linhas[i]).join("\n");
+    if (montado === codigo) return undefined;
+    situacao = `Exercício "monte o código" (${exercicio.linguagem}): o aluno precisava ordenar as linhas.
+Ordem do aluno:
+${montado}
+
+Ordem certa:
+${codigo}
+
+Em no máximo 3 frases curtas, aponte a primeira linha fora do lugar e explique por que ela precisa vir antes ou depois (o que ela usa ou cria).`;
+  }
+
+  return {
+    system: `${montarSystemPrompt(pathname)}\n\nO aluno está no modo lição e acabou de errar um exercício de código.\n${situacao} ${INSTRUCAO_BALAO}`,
+    pedido: "Por que a minha resposta está errada?",
+  };
 }

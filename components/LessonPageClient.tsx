@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 import { Lesson } from "@/lib/types";
 import { useLessons } from "@/lib/lessons-context";
 import { useProgress } from "@/lib/progress-context";
@@ -105,14 +105,17 @@ export default function LessonPageClient({
       )}
 
       {!emBreve && (
-        <ComecarLicao
-          slug={lesson.slug}
-          titulo={lesson.titulo}
-          secoes={lesson.secoes}
-          quiz={lesson.quiz}
-          exercicios={lesson.exercicios}
-          proxima={slugProximo ? { href: `/aula/${slugProximo}`, rotulo: "Próxima aula" } : undefined}
-        />
+        <Suspense fallback={null}>
+          <ComecarLicao
+            slug={lesson.slug}
+            titulo={lesson.titulo}
+            secoes={lesson.secoes}
+            quiz={lesson.quiz}
+            exercicios={lesson.exercicios}
+            exerciciosCodigo={lesson.exerciciosCodigo}
+            proxima={slugProximo ? { href: `/aula/${slugProximo}`, rotulo: "Próxima aula" } : undefined}
+          />
+        </Suspense>
       )}
 
       {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={lesson.slug} />}

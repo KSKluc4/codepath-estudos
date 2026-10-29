@@ -2,11 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { Component, ReactNode, useState, useSyncExternalStore } from "react";
-import { BitEstado } from "@/lib/mascote";
+import { ZyreEstado } from "@/lib/mascote";
 import { useMovimentoReduzido } from "@/lib/useMediaQuery";
-import BitSvg from "./BitSvg";
+import ZyreSvg from "./ZyreSvg";
 
-const Bit3D = dynamic(() => import("./Bit3D"), { ssr: false });
+const Zyre3D = dynamic(() => import("./Zyre3D"), { ssr: false });
 
 let suporteWebgl: boolean | undefined;
 
@@ -28,9 +28,9 @@ function inscreverNada() {
   return () => {};
 }
 
-export function precarregarBit3D() {
+export function precarregarZyre3D() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !temWebgl()) return;
-  void import("./Bit3D");
+  void import("./Zyre3D");
 }
 
 class Limite3D extends Component<{ children: ReactNode }, { falhou: boolean }> {
@@ -45,7 +45,7 @@ class Limite3D extends Component<{ children: ReactNode }, { falhou: boolean }> {
   }
 }
 
-export default function BitMascote({
+export default function ZyreMascote({
   estado = "idle",
   intensidade = 1,
   gatilho = 0,
@@ -54,7 +54,7 @@ export default function BitMascote({
   pausado = false,
   permitir3d = true,
 }: {
-  estado?: BitEstado;
+  estado?: ZyreEstado;
   intensidade?: number;
   gatilho?: number;
   olhar?: "esquerda" | "cima";
@@ -70,11 +70,11 @@ export default function BitMascote({
   const mostrar3d = usar3d && pronto;
 
   return (
-    <div className={`bit-mascote ${mostrar3d ? "bit-mascote-3d" : ""}`}>
-      {!mostrar3d && <BitSvg estado={estado} />}
+    <div className={`zyre-mascote ${mostrar3d ? "zyre-mascote-3d" : ""}`}>
+      {!mostrar3d && <ZyreSvg estado={estado} />}
       {usar3d && (
         <Limite3D>
-          <Bit3D
+          <Zyre3D
             estado={estado}
             intensidade={intensidade}
             gatilho={gatilho}

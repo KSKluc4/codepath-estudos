@@ -9,6 +9,7 @@ import BootstrapClient from "@/components/BootstrapClient";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import MascotChat from "@/components/MascotChat";
+import Celebracoes from "@/components/Celebracoes";
 import { getLessonSummaries } from "@/lib/lessons";
 import { MESES } from "@/lib/months";
 import { getChapterSummaries } from "@/lib/chapters";
@@ -49,6 +50,7 @@ export default function RootLayout({
             <main className="flex-grow-1 min-w-0">{children}</main>
           </div>
           <MascotChat />
+          <Celebracoes />
         </AppProviders>
       </body>
     </html>

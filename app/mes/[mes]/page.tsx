@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getLessonSummaries } from "@/lib/lessons";
 import { getMesMeta, MESES } from "@/lib/months";
-import LessonCard from "@/components/LessonCard";
+import { MapaMes } from "@/components/MapaCaminho";
 
 export function generateStaticParams() {
   return MESES.map((m) => ({ mes: String(m.mes) }));
@@ -13,8 +12,6 @@ export default async function MesPage({ params }: { params: Promise<{ mes: strin
   const mesNum = Number(mesParam);
   const mesMeta = getMesMeta(mesNum);
   if (!mesMeta) notFound();
-
-  const lessons = getLessonSummaries().filter((l) => l.mes === mesNum);
 
   return (
     <div className="container-fluid" style={{ maxWidth: 1100 }}>
@@ -46,13 +43,7 @@ export default async function MesPage({ params }: { params: Promise<{ mes: strin
         </div>
       </div>
 
-      <div className="row g-3">
-        {lessons.map((lesson) => (
-          <div className="col-12 col-sm-6 col-lg-4" key={lesson.slug}>
-            <LessonCard lesson={lesson} />
-          </div>
-        ))}
-      </div>
+      <MapaMes mes={mesNum} />
 
       <div className="d-flex justify-content-between mt-4">
         {mesNum > 1 ? (
