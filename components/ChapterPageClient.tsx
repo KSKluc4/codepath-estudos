@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { Suspense, useRef } from "react";
 import { Chapter } from "@/lib/types";
 import { NIVEL_LABELS } from "@/lib/niveis";
 import { useChapters } from "@/lib/chapters-context";
@@ -85,18 +85,20 @@ export default function ChapterPageClient({
       )}
 
       {!emBreve && (
-        <ComecarLicao
-          slug={chapter.slug}
-          titulo={chapter.titulo}
-          secoes={chapter.secoes}
-          quiz={chapter.quiz}
-          exercicios={chapter.exercicios}
-          proxima={
-            capituloProximo
-              ? { href: `/linguagens/${chapter.trilha}/${capituloProximo}`, rotulo: "Próximo capítulo" }
-              : undefined
-          }
-        />
+        <Suspense fallback={null}>
+          <ComecarLicao
+            slug={chapter.slug}
+            titulo={chapter.titulo}
+            secoes={chapter.secoes}
+            quiz={chapter.quiz}
+            exercicios={chapter.exercicios}
+            proxima={
+              capituloProximo
+                ? { href: `/linguagens/${chapter.trilha}/${capituloProximo}`, rotulo: "Próximo capítulo" }
+                : undefined
+            }
+          />
+        </Suspense>
       )}
 
       {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={chapter.slug} />}

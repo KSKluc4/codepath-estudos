@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getChapterSummaries } from "@/lib/chapters";
 import { getTrackMeta, TRILHAS } from "@/lib/tracks";
-import { NIVEL_LABELS, NIVEL_ORDEM } from "@/lib/niveis";
-import ChapterCard from "@/components/ChapterCard";
+import { MapaTrilha } from "@/components/MapaCaminho";
 
 export function generateStaticParams() {
   return TRILHAS.map((t) => ({ trilha: t.id }));
@@ -13,8 +11,6 @@ export default async function TrilhaPage({ params }: { params: Promise<{ trilha:
   const { trilha: trilhaParam } = await params;
   const trilha = getTrackMeta(trilhaParam);
   if (!trilha) notFound();
-
-  const capitulos = getChapterSummaries().filter((c) => c.trilha === trilha.id);
 
   return (
     <div className="container-fluid" style={{ maxWidth: 1100 }}>
@@ -47,22 +43,7 @@ export default async function TrilhaPage({ params }: { params: Promise<{ trilha:
         </div>
       </div>
 
-      {NIVEL_ORDEM.map((nivel) => {
-        const doNivel = capitulos.filter((c) => c.nivel === nivel);
-        if (doNivel.length === 0) return null;
-        return (
-          <section className="mb-5" key={nivel}>
-            <h2 className="h5 fw-semibold mb-3">{NIVEL_LABELS[nivel]}</h2>
-            <div className="row g-3">
-              {doNivel.map((capitulo) => (
-                <div className="col-12 col-sm-6 col-lg-4" key={capitulo.slug}>
-                  <ChapterCard chapter={capitulo} />
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+      <MapaTrilha trilha={trilha.id} />
     </div>
   );
 }

@@ -68,14 +68,12 @@ export default function ModoLicao({
   slug,
   titulo,
   cards,
-  estadoInicial,
   proxima,
   onFechar,
 }: {
   slug: string;
   titulo: string;
   cards: CardLicao[];
-  estadoInicial: EstadoLicao;
   proxima?: ProximaEtapa;
   onFechar: () => void;
 }) {
@@ -83,7 +81,7 @@ export default function ModoLicao({
   const { xp: xpTotal, marcarConcluida, adicionarXp, som, setSom } = useProgress();
   const telaLarga = useMediaQuery("(min-width: 992px)");
   const movimentoReduzido = useMovimentoReduzido();
-  const [estado, setEstado] = useState(estadoInicial);
+  const [estado, setEstado] = useState(() => iniciarLicao(cards, Math.random));
   const [tentativa, setTentativa] = useState(0);
   const [fala, setFala] = useState<Fala>({ texto: FALAS.inicio[0], id: 0 });
   const [falando, setFalando] = useState(true);
@@ -406,7 +404,7 @@ export default function ModoLicao({
                     Voltar para o conteúdo
                   </button>
                   {proxima && (
-                    <Link href={proxima.href} className="btn btn-licao btn-lg" onClick={onFechar}>
+                    <Link href={proxima.href} replace className="btn btn-licao btn-lg">
                       {proxima.rotulo}
                       <i className="bi bi-arrow-right ms-2" />
                     </Link>

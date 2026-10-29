@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useMemo, useRef } from "react";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "@/lib/types";
-import { EstadoLicao, VIDAS_POR_LICAO, iniciarLicao, montarCards } from "@/lib/licao";
+import { VIDAS_POR_LICAO, montarCards } from "@/lib/licao";
 import ZyreSvg from "./ZyreSvg";
 import { precarregarZyre3D } from "./ZyreMascote";
 import type { ProximaEtapa } from "./ModoLicao";
@@ -39,10 +40,30 @@ export default function ComecarLicao({
   exercicios: Exercicio[];
   proxima?: ProximaEtapa;
 }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const cards = useMemo(() => montarCards(secoes, quiz, exercicios), [secoes, quiz, exercicios]);
-  const [estadoInicial, setEstadoInicial] = useState<EstadoLicao | null>(null);
+  const abriuPeloBotao = useRef(false);
 
   if (cards.length === 0) return null;
+
+  // O modo lição fica na URL (?licao=1): o mapa abre direto nele e o "voltar" do
+  // navegador fecha a lição
+  const aberto = searchParams.get("licao") === "1";
+
+  const abrir = () => {
+    abriuPeloBotao.current = true;
+    window.history.pushState(null, "", `${pathname}?licao=1`);
+  };
+
+  const fechar = () => {
+    if (abriuPeloBotao.current) {
+      abriuPeloBotao.current = false;
+      window.history.back();
+    } else {
+      window.history.replaceState(null, "", pathname);
+    }
+  };
 
   const conceitos = cards.filter((c) => c.tipo === "conceito").length;
   const perguntas = cards.filter((c) => c.tipo === "pergunta").length;
@@ -63,7 +84,7 @@ export default function ComecarLicao({
         <button
           type="button"
           className="btn btn-licao btn-lg"
-          onClick={() => setEstadoInicial(iniciarLicao(cards, Math.random))}
+          onClick={abrir}
           onPointerEnter={precarregar}
           onFocus={precarregar}
         >
@@ -72,14 +93,13 @@ export default function ComecarLicao({
         </button>
       </div>
 
-      {estadoInicial && (
+      {aberto && (
         <ModoLicao
           slug={slug}
           titulo={titulo}
           cards={cards}
-          estadoInicial={estadoInicial}
           proxima={proxima}
-          onFechar={() => setEstadoInicial(null)}
+          onFechar={fechar}
         />
       )}
     </>
