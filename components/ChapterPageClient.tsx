@@ -11,6 +11,7 @@ import ChapterExerciseBlock from "./ChapterExerciseBlock";
 import QuizBlock from "./QuizBlock";
 import MarcarConcluidaButton from "./MarcarConcluidaButton";
 import LessonAudioPlayer from "./LessonAudioPlayer";
+import ComecarLicao from "./ComecarLicao";
 
 export default function ChapterPageClient({
   chapter,
@@ -81,6 +82,21 @@ export default function ChapterPageClient({
           Este capítulo ainda está em produção. O objetivo acima resume o que ele vai cobrir — volte
           em breve!
         </div>
+      )}
+
+      {!emBreve && (
+        <ComecarLicao
+          slug={chapter.slug}
+          titulo={chapter.titulo}
+          secoes={chapter.secoes}
+          quiz={chapter.quiz}
+          exercicios={chapter.exercicios}
+          proxima={
+            capituloProximo
+              ? { href: `/linguagens/${chapter.trilha}/${capituloProximo}`, rotulo: "Próximo capítulo" }
+              : undefined
+          }
+        />
       )}
 
       {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={chapter.slug} />}

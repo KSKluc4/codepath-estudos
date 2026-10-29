@@ -4,8 +4,8 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeHighlight from "rehype-highlight";
 import rehypeStringify from "rehype-stringify";
-import type { Root, RootContent, Heading, List, Blockquote } from "mdast";
-import { Exercicio, QuizPergunta } from "./types";
+import type { Root, RootContent, Heading, List, ListItem, Blockquote, Code } from "mdast";
+import { Exercicio, QuizPergunta, SecaoConteudo } from "./types";
 
 const renderProcessor = unified()
   .use(remarkRehype)
@@ -72,6 +72,125 @@ function agruparPorH3(nodes: RootContent[]): Secao[] {
   return secoes;
 }
 
+// Cards do modo lição: o tamanho é estimado em "linhas na tela" para que um
+// bloco de código de 10 linhas pese mais que um parágrafo curto.
+const LIMITE_LINHAS_CARD = 14;
+
+function linhasDoTexto(node: RootContent, colunas: number): number {
+  return Math.ceil(extractText(node).length / colunas);
+}
+
+function linhasVisuais(node: RootContent): number {
+  switch (node.type) {
+    case "code":
+      return node.value.split("\n").length + 1;
+    case "heading":
+      return 2;
+    case "list":
+      return node.children.reduce((total, item) => total + linhasDoTexto(item, 70), 1);
+    case "table":
+      return node.children.length * 1.5 + 1;
+    default:
+      return linhasDoTexto(node, 75) + 1;
+  }
+}
+
+function pesoDosBlocos(nodes: RootContent[]): number {
+  return nodes.reduce((total, n) => total + linhasVisuais(n), 0);
+}
+
+function dividirLista(lista: List): List[] {
+  if (linhasVisuais(lista) <= LIMITE_LINHAS_CARD || lista.children.length < 2) return [lista];
+  const partes: List[] = [];
+  let itens: ListItem[] = [];
+  let peso = 0;
+  let inicio = lista.start ?? 1;
+  for (const item of lista.children) {
+    const linhas = linhasDoTexto(item, 70);
+    if (itens.length > 0 && peso + linhas > LIMITE_LINHAS_CARD) {
+      partes.push({ ...lista, start: inicio, children: itens });
+      inicio += itens.length;
+      itens = [];
+      peso = 0;
+    }
+    itens.push(item);
+    peso += linhas;
+  }
+  partes.push({ ...lista, start: inicio, children: itens });
+  return partes;
+}
+
+// Quebra só em linha em branco seguida de código na coluna 0 (novo exemplo),
+// nunca no meio de uma função ou antes de um "}".
+function dividirCodigo(code: Code): Code[] {
+  if (linhasVisuais(code) <= LIMITE_LINHAS_CARD) return [code];
+  const linhas = code.value.split("\n");
+  const trechos: string[][] = [[]];
+  linhas.forEach((linha, i) => {
+    if (i > 0 && linhas[i - 1].trim() === "" && /^[^\s})\]]/.test(linha)) trechos.push([]);
+    trechos[trechos.length - 1].push(linha);
+  });
+
+  const partes: Code[] = [];
+  let atual: string[] = [];
+  for (const trecho of trechos) {
+    if (atual.length > 0 && atual.length + trecho.length >= LIMITE_LINHAS_CARD) {
+      partes.push({ ...code, value: atual.join("\n").trimEnd() });
+      atual = [];
+    }
+    atual.push(...trecho);
+  }
+  partes.push({ ...code, value: atual.join("\n").trimEnd() });
+  return partes;
+}
+
+function introduzProximoBloco(node: RootContent): boolean {
+  if (node.type === "heading") return true;
+  return node.type === "paragraph" && extractText(node).trim().endsWith(":");
+}
+
+function dividirEmPartes(nodes: RootContent[]): RootContent[][] {
+  const blocos = nodes.flatMap((n): RootContent[] => {
+    if (n.type === "list") return dividirLista(n);
+    if (n.type === "code") return dividirCodigo(n);
+    return [n];
+  });
+  const partes: RootContent[][] = [];
+  let atual: RootContent[] = [];
+  let peso = 0;
+
+  for (const bloco of blocos) {
+    const linhas = linhasVisuais(bloco);
+    const subtituloComCardCheio =
+      bloco.type === "heading" && bloco.depth === 3 && peso >= LIMITE_LINHAS_CARD / 2;
+    const soTemGancho = atual.length === 1 && introduzProximoBloco(atual[0]);
+    if (atual.length > 0 && !soTemGancho && (peso + linhas > LIMITE_LINHAS_CARD || subtituloComCardCheio)) {
+      // "Veja o exemplo:" ou um ### não podem ficar sozinhos no fim do card
+      const gancho = atual.length > 1 && introduzProximoBloco(atual[atual.length - 1]) ? atual.pop() : undefined;
+      partes.push(atual);
+      atual = gancho ? [gancho] : [];
+      peso = gancho ? linhasVisuais(gancho) : 0;
+    }
+    atual.push(bloco);
+    peso += linhas;
+  }
+
+  if (atual.length > 0) {
+    const anterior = partes[partes.length - 1];
+    const sobraPequena = peso < LIMITE_LINHAS_CARD * 0.35;
+    if (anterior && sobraPequena && pesoDosBlocos(anterior) + peso <= LIMITE_LINHAS_CARD * 1.3) {
+      anterior.push(...atual);
+    } else {
+      partes.push(atual);
+    }
+  }
+  return partes;
+}
+
+function parseSecaoConteudo(titulo: string | null, nodes: RootContent[]): SecaoConteudo {
+  return { titulo, partes: dividirEmPartes(nodes).map(nodesToHtml) };
+}
+
 function parseExercicio(secao: Secao): Exercicio {
   const idxSolucao = secao.nodes.findIndex(
     (n) => n.type === "heading" && (n as Heading).depth === 3 && normalize(headingText(n as Heading)).startsWith("solucao")
@@ -112,6 +231,7 @@ function parseQuizPergunta(secao: Secao): QuizPergunta | null {
 
 export interface LessonBody {
   introHtml: string;
+  secoes: SecaoConteudo[];
   exercicios: Exercicio[];
   quiz: QuizPergunta[];
   duvidaHtml: string;
@@ -122,6 +242,7 @@ export function parseLessonBody(markdown: string): LessonBody {
   const secoesH2 = agruparPorH2(tree.children);
 
   const introNodes: RootContent[] = [];
+  const secoes: SecaoConteudo[] = [];
   const exercicios: Exercicio[] = [];
   let quiz: QuizPergunta[] = [];
   let duvidaNodes: RootContent[] = [];
@@ -129,6 +250,7 @@ export function parseLessonBody(markdown: string): LessonBody {
   for (const secao of secoesH2) {
     if (secao.titulo === null) {
       introNodes.push(...secao.nodes);
+      if (secao.nodes.length > 0) secoes.push(parseSecaoConteudo(null, secao.nodes));
       continue;
     }
     const tituloNorm = normalize(secao.titulo);
@@ -144,11 +266,13 @@ export function parseLessonBody(markdown: string): LessonBody {
     } else {
       introNodes.push({ type: "heading", depth: 2, children: [{ type: "text", value: secao.titulo }] } as RootContent);
       introNodes.push(...secao.nodes);
+      secoes.push(parseSecaoConteudo(secao.titulo, secao.nodes));
     }
   }
 
   return {
     introHtml: nodesToHtml(introNodes),
+    secoes,
     exercicios,
     quiz,
     duvidaHtml: duvidaNodes.length ? nodesToHtml(duvidaNodes) : "",

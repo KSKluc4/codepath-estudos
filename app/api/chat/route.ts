@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { montarSystemPrompt } from "@/lib/mascot-context";
+import { montarExplicacaoErro, montarSystemPrompt } from "@/lib/mascot-context";
 
 const MODELO_PADRAO = "claude-haiku-5-5";
 const MAX_TOKENS = 1024;
@@ -32,23 +32,35 @@ export async function POST(request: Request) {
     return erro("Assistente indisponível: ANTHROPIC_API_KEY não configurada no servidor.", 503);
   }
 
-  let corpo: { pathname?: unknown; messages?: unknown };
+  let corpo: { pathname?: unknown; messages?: unknown; perguntaIndex?: unknown; opcaoEscolhida?: unknown };
   try {
     corpo = await request.json();
   } catch {
     return erro("Corpo da requisição inválido.", 400);
   }
 
-  const mensagens = validarMensagens(corpo.messages);
-  if (!mensagens) return erro("Mensagens inválidas.", 400);
   const pathname = typeof corpo.pathname === "string" ? corpo.pathname : "/";
+  let system: string;
+  let mensagens: Anthropic.MessageParam[];
+
+  if (corpo.perguntaIndex !== undefined) {
+    const explicacao = montarExplicacaoErro(pathname, corpo.perguntaIndex, corpo.opcaoEscolhida);
+    if (!explicacao) return erro("Pergunta inválida.", 400);
+    system = explicacao.system;
+    mensagens = [{ role: "user", content: explicacao.pedido }];
+  } else {
+    const validadas = validarMensagens(corpo.messages);
+    if (!validadas) return erro("Mensagens inválidas.", 400);
+    system = montarSystemPrompt(pathname);
+    mensagens = validadas;
+  }
 
   const client = new Anthropic();
   const stream = client.messages.stream({
     model: process.env.ANTHROPIC_MODEL || MODELO_PADRAO,
     max_tokens: MAX_TOKENS,
     output_config: { effort: "low" },
-    system: montarSystemPrompt(pathname),
+    system,
     messages: mensagens,
   });
 

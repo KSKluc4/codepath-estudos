@@ -5,8 +5,11 @@ import { TRILHAS, getTrackMeta } from "./tracks";
 import { NIVEL_LABELS } from "./niveis";
 import { htmlParaTexto } from "./html-texto";
 import { MASCOTE_NOME } from "./mascote";
+import { QuizPergunta } from "./types";
 
 const LIMITE_CONTEUDO = 6000;
+const LIMITE_OPCAO = 400;
+const LIMITE_EXPLICACAO = 1200;
 
 const PROMPT_BASE = `Você é o ${MASCOTE_NOME}, o mascote do CodePath: uma plataforma de estudos de programação em português, com um curso de 6 meses (da lógica binária ao projeto final) e trilhas de referência de linguagens.
 
@@ -67,14 +70,61 @@ function decodificar(segmento: string): string {
   }
 }
 
-export function montarSystemPrompt(pathname: string): string {
+function lerPathname(pathname: string) {
   const aula = pathname.match(/^\/aula\/([^/]+)\/?$/);
   const capitulo = pathname.match(/^\/linguagens\/([^/]+)\/([^/]+)\/?$/);
+  return {
+    aula: aula ? decodificar(aula[1]) : undefined,
+    capitulo: capitulo ? { trilha: decodificar(capitulo[1]), capitulo: decodificar(capitulo[2]) } : undefined,
+  };
+}
+
+export function montarSystemPrompt(pathname: string): string {
+  const { aula, capitulo } = lerPathname(pathname);
 
   const contexto =
-    (aula && contextoAula(decodificar(aula[1]))) ||
-    (capitulo && contextoCapitulo(decodificar(capitulo[1]), decodificar(capitulo[2]))) ||
+    (aula && contextoAula(aula)) ||
+    (capitulo && contextoCapitulo(capitulo.trilha, capitulo.capitulo)) ||
     contextoGeral();
 
   return `${PROMPT_BASE}\n\n${contexto}`;
+}
+
+function quizDoPathname(pathname: string): QuizPergunta[] | undefined {
+  const { aula, capitulo } = lerPathname(pathname);
+  if (aula) return getLessonBySlug(aula)?.quiz;
+  if (capitulo) return getChapterBySlug(capitulo.trilha, capitulo.capitulo)?.quiz;
+  return undefined;
+}
+
+// A pergunta e a opção vêm só como índices: o texto é resolvido aqui no servidor,
+// então o cliente não consegue injetar prompt.
+export function montarExplicacaoErro(
+  pathname: string,
+  perguntaIndex: unknown,
+  opcaoEscolhida: unknown
+): { system: string; pedido: string } | undefined {
+  const quiz = quizDoPathname(pathname);
+  if (!quiz || !Number.isInteger(perguntaIndex) || !Number.isInteger(opcaoEscolhida)) return undefined;
+
+  const pergunta = quiz[perguntaIndex as number];
+  const escolhida = pergunta?.opcoes[opcaoEscolhida as number];
+  const correta = pergunta?.opcoes.find((o) => o.correta);
+  if (!escolhida || !correta || escolhida.correta) return undefined;
+
+  const opcoes = pergunta.opcoes.map((o, i) => `${i + 1}. ${htmlParaTexto(o.html, LIMITE_OPCAO)}`).join("\n");
+
+  const system = `${montarSystemPrompt(pathname)}
+
+O aluno está no modo lição e acabou de errar esta pergunta:
+Pergunta: ${htmlParaTexto(pergunta.perguntaHtml, LIMITE_OPCAO)}
+Opções:
+${opcoes}
+Resposta do aluno: ${htmlParaTexto(escolhida.html, LIMITE_OPCAO)}
+Resposta correta: ${htmlParaTexto(correta.html, LIMITE_OPCAO)}
+Explicação do material: ${htmlParaTexto(pergunta.explicacaoHtml, LIMITE_EXPLICACAO)}
+
+Sua resposta aparece num balão pequeno ao lado do mascote. Em no máximo 3 frases curtas, explique por que a opção que o aluno escolheu está errada (qual confusão provavelmente levou a ela) e o que torna a correta certa. Fale direto com o aluno, com tom encorajador. Não use listas, títulos, markdown nem blocos de código.`;
+
+  return { system, pedido: "Por que a minha resposta está errada?" };
 }

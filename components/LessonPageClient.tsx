@@ -9,6 +9,7 @@ import ExerciseBlock from "./ExerciseBlock";
 import QuizBlock from "./QuizBlock";
 import MarcarConcluidaButton from "./MarcarConcluidaButton";
 import LessonAudioPlayer from "./LessonAudioPlayer";
+import ComecarLicao from "./ComecarLicao";
 
 export default function LessonPageClient({
   lesson,
@@ -101,6 +102,17 @@ export default function LessonPageClient({
           Esta aula ainda está em produção. Os objetivos abaixo resumem o que ela vai cobrir — volte
           em breve!
         </div>
+      )}
+
+      {!emBreve && (
+        <ComecarLicao
+          slug={lesson.slug}
+          titulo={lesson.titulo}
+          secoes={lesson.secoes}
+          quiz={lesson.quiz}
+          exercicios={lesson.exercicios}
+          proxima={slugProximo ? { href: `/aula/${slugProximo}`, rotulo: "Próxima aula" } : undefined}
+        />
       )}
 
       {!emBreve && <LessonAudioPlayer contentRef={contentRef} lessonKey={lesson.slug} />}

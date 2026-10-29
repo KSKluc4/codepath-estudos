@@ -2,10 +2,21 @@
 
 import { useState } from "react";
 import { useProgress } from "@/lib/progress-context";
+import { calcularNivel } from "@/lib/xp";
 
 export default function ConfiguracoesClient() {
-  const { hidratado, unlockAll, setUnlockAll, resetarProgresso, completedSlugs, studyDates, streak } =
-    useProgress();
+  const {
+    hidratado,
+    unlockAll,
+    setUnlockAll,
+    som,
+    setSom,
+    resetarProgresso,
+    completedSlugs,
+    studyDates,
+    streak,
+    xp,
+  } = useProgress();
   const [confirmando, setConfirmando] = useState(false);
 
   return (
@@ -40,6 +51,29 @@ export default function ConfiguracoesClient() {
 
       <div className="card mb-4">
         <div className="card-body">
+          <h2 className="h6 fw-semibold mb-3">Modo lição</h2>
+          <div className="form-check form-switch">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              role="switch"
+              id="somSwitch"
+              checked={hidratado && som}
+              onChange={(e) => setSom(e.target.checked)}
+            />
+            <label className="form-check-label" htmlFor="somSwitch">
+              Efeitos sonoros
+            </label>
+          </div>
+          <p className="text-body-secondary small mb-0 mt-2">
+            Sons curtos de acerto, erro, combo e fim de lição. Também dá para ligar e desligar pelo
+            botão de som dentro da lição.
+          </p>
+        </div>
+      </div>
+
+      <div className="card mb-4">
+        <div className="card-body">
           <h2 className="h6 fw-semibold mb-3">Seu progresso</h2>
           <ul className="list-unstyled small text-body-secondary mb-0">
             <li className="mb-1">
@@ -49,6 +83,10 @@ export default function ConfiguracoesClient() {
             <li className="mb-1">
               <i className="bi bi-fire me-2 text-warning" />
               Streak atual: {hidratado ? streak : 0} {streak === 1 ? "dia" : "dias"}
+            </li>
+            <li className="mb-1">
+              <i className="bi bi-lightning-charge me-2 text-primary" />
+              {hidratado ? xp : 0} XP · nível {calcularNivel(hidratado ? xp : 0).nivel}
             </li>
             <li>
               <i className="bi bi-calendar-check me-2 text-info" />
@@ -63,7 +101,7 @@ export default function ConfiguracoesClient() {
           <h2 className="h6 fw-semibold mb-3 text-danger">Zona de risco</h2>
           <p className="text-body-secondary small">
             Isso apaga todo o progresso salvo neste navegador: aulas concluídas, respostas de quiz,
-            rascunhos de exercícios e streak. Não pode ser desfeito.
+            rascunhos de exercícios, XP e streak. Não pode ser desfeito.
           </p>
           {!confirmando ? (
             <button className="btn btn-outline-danger" onClick={() => setConfirmando(true)}>

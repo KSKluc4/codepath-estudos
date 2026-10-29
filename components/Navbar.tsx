@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useProgress } from "@/lib/progress-context";
+import { calcularNivel } from "@/lib/xp";
 import BuscaAulas from "./BuscaAulas";
 
 export default function Navbar() {
-  const { streak } = useProgress();
+  const { streak, xp } = useProgress();
+  const nivel = calcularNivel(xp);
+  const progressoNivel = Math.min(100, (nivel.xpNoNivel / nivel.xpParaProximo) * 100);
 
   return (
     <nav className="navbar navbar-expand-lg sticky-top border-bottom border-secondary-subtle app-navbar">
@@ -39,6 +42,17 @@ export default function Navbar() {
           <span className="badge text-bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-1 px-2 py-2">
             <i className="bi bi-fire" />
             {streak} {streak === 1 ? "dia" : "dias"}
+          </span>
+          <span
+            className="badge navbar-xp d-flex align-items-center gap-1 px-2 py-2"
+            title={`Nível ${nivel.nivel}: ${nivel.xpNoNivel}/${nivel.xpParaProximo} XP para o próximo`}
+          >
+            <i className="bi bi-lightning-charge-fill" />
+            <span className="d-none d-sm-inline">Nv {nivel.nivel} ·{" "}</span>
+            {xp} XP
+            <span className="navbar-xp-barra" aria-hidden="true">
+              <span style={{ width: `${progressoNivel}%` }} />
+            </span>
           </span>
           <Link href="/configuracoes" className="btn btn-outline-secondary btn-sm" title="Configurações">
             <i className="bi bi-gear" />
