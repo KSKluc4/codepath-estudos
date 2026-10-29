@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useProgress } from "@/lib/progress-context";
+import { useMediaQuery, useMovimentoReduzido } from "@/lib/useMediaQuery";
 import { setModoLicaoAberto } from "@/lib/modo-licao";
 import { calcularNivel } from "@/lib/xp";
 import { FALAS, sortearFala } from "@/lib/bit-falas";
-import { BitEstado } from "@/lib/mascote";
+import { BitEstado, MASCOTE_NOME } from "@/lib/mascote";
 import {
   CardLicao,
   EstadoLicao,
@@ -24,7 +26,7 @@ import {
   verificarResposta,
 } from "@/lib/licao";
 import CopyableHtml from "./CopyableHtml";
-import BitSvg from "./BitSvg";
+import BitMascote from "./BitMascote";
 
 export interface ProximaEtapa {
   href: string;
@@ -36,6 +38,13 @@ interface Fala {
   id: number;
 }
 
+interface Explicacao {
+  status: "pensando" | "escrevendo" | "pronta";
+  texto: string;
+}
+
+const MSG_SEM_EXPLICACAO = `O ${MASCOTE_NOME} não conseguiu responder agora. Leia a explicação aqui embaixo e siga em frente!`;
+
 function falaDoCard(item: ItemFila | undefined): string {
   if (!item) return "";
   if (item.card.tipo === "pergunta") return sortearFala(item.repeticao ? FALAS.repeticao : FALAS.pergunta);
@@ -43,10 +52,13 @@ function falaDoCard(item: ItemFila | undefined): string {
   return Math.random() < 0.4 ? sortearFala(FALAS.conceito) : "";
 }
 
-function estadoDoBit(estado: EstadoLicao): BitEstado {
+function estadoDoBit(estado: EstadoLicao, explicacao: Explicacao | null, falando: boolean): BitEstado {
+  if (explicacao?.status === "pensando") return "pensando";
+  if (explicacao?.status === "escrevendo") return "falando";
   if (estado.fase === "fim") return "comemorando";
   if (estado.fase === "sem-vidas") return "triste";
   if (estado.fase === "feedback") return estado.acertou ? "comemorando" : "triste";
+  if (falando) return "falando";
   return itemAtual(estado)?.card.tipo === "pergunta" ? "olhando" : "idle";
 }
 
@@ -171,14 +183,22 @@ export default function ModoLicao({
   proxima?: ProximaEtapa;
   onFechar: () => void;
 }) {
+  const pathname = usePathname();
   const { xp: xpTotal, marcarConcluida, adicionarXp } = useProgress();
+  const telaLarga = useMediaQuery("(min-width: 992px)");
+  const movimentoReduzido = useMovimentoReduzido();
   const [estado, setEstado] = useState(estadoInicial);
   const [tentativa, setTentativa] = useState(0);
   const [fala, setFala] = useState<Fala>({ texto: FALAS.inicio[0], id: 0 });
+  const [falando, setFalando] = useState(true);
+  const [reacao, setReacao] = useState(0);
+  const [explicacao, setExplicacao] = useState<Explicacao | null>(null);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
   const [nivelAlcancado, setNivelAlcancado] = useState<number | null>(null);
   const corpoRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  const bitRef = useRef<HTMLElement>(null);
+  const pedidoRef = useRef<AbortController | null>(null);
 
   const item = itemAtual(estado);
   const emAndamento = estado.fase === "card" || estado.fase === "feedback";
@@ -190,15 +210,70 @@ export default function ModoLicao({
     return () => {
       setModoLicaoAberto(false);
       document.body.style.overflow = overflowAnterior;
+      pedidoRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    if (!falando) return;
+    const timer = window.setTimeout(() => setFalando(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [falando, fala.id]);
 
   useEffect(() => {
     corpoRef.current?.scrollTo({ top: 0 });
     cardRef.current?.focus({ preventScroll: true });
   }, [estado.posicao, tentativa]);
 
-  const falar = (texto: string) => setFala((atual) => ({ texto, id: atual.id + 1 }));
+  const falar = (texto: string) => {
+    setFala((atual) => ({ texto, id: atual.id + 1 }));
+    setFalando(texto !== "");
+  };
+
+  const cancelarExplicacao = () => {
+    pedidoRef.current?.abort();
+    pedidoRef.current = null;
+    setExplicacao(null);
+  };
+
+  const pedirExplicacao = async () => {
+    if (item?.card.tipo !== "pergunta" || estado.selecionada === null || explicacao) return;
+    const controle = new AbortController();
+    pedidoRef.current = controle;
+    setExplicacao({ status: "pensando", texto: "" });
+    bitRef.current?.scrollIntoView({ block: "nearest", behavior: movimentoReduzido ? "auto" : "smooth" });
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pathname,
+          perguntaIndex: item.card.indice,
+          opcaoEscolhida: item.ordemOpcoes[estado.selecionada],
+        }),
+        signal: controle.signal,
+      });
+      if (!res.ok || !res.body) {
+        const dados = await res.json().catch(() => null);
+        setExplicacao({ status: "pronta", texto: res.status === 429 && dados?.erro ? dados.erro : MSG_SEM_EXPLICACAO });
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let texto = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        texto += decoder.decode(value, { stream: true });
+        setExplicacao({ status: "escrevendo", texto });
+      }
+      setExplicacao({ status: "pronta", texto: texto.trim() ? texto : MSG_SEM_EXPLICACAO });
+    } catch {
+      if (!controle.signal.aborted) setExplicacao({ status: "pronta", texto: MSG_SEM_EXPLICACAO });
+    }
+  };
 
   const aoSelecionar = (posicao: number) => setEstado(selecionarOpcao(estado, posicao));
 
@@ -207,6 +282,7 @@ export default function ModoLicao({
     if (proximo === estado) return;
     setEstado(proximo);
     if (proximo.acertou) {
+      setReacao((r) => r + 1);
       falar(proximo.combo >= 3 ? sortearFala(FALAS.combo, proximo.combo) : sortearFala(FALAS.acerto));
     } else {
       falar(sortearFala(proximo.vidas === 1 ? FALAS.ultimaVida : FALAS.erro));
@@ -216,8 +292,10 @@ export default function ModoLicao({
   const aoContinuar = () => {
     const proximo = continuar(estado, Math.random);
     if (proximo === estado) return;
+    cancelarExplicacao();
     setEstado(proximo);
     if (proximo.fase === "fim") {
+      setReacao((r) => r + 1);
       const nivelAntes = calcularNivel(xpTotal).nivel;
       const nivelDepois = calcularNivel(xpTotal + proximo.xp).nivel;
       setNivelAlcancado(nivelDepois > nivelAntes ? nivelDepois : null);
@@ -232,6 +310,7 @@ export default function ModoLicao({
   };
 
   const tentarDeNovo = () => {
+    cancelarExplicacao();
     setEstado(iniciarLicao(cards, Math.random));
     setTentativa((t) => t + 1);
     falar(sortearFala(FALAS.inicio));
@@ -422,14 +501,33 @@ export default function ModoLicao({
             )}
           </div>
 
-          <aside className="licao-bit" aria-live="polite">
-            {fala.texto && (
-              <div key={fala.id} className="licao-balao">
-                {fala.texto}
+          <aside className="licao-bit" ref={bitRef} aria-live="polite">
+            {explicacao ? (
+              <div className="licao-balao licao-balao-explicacao">
+                {explicacao.status === "pensando" ? (
+                  <span className="mascote-digitando" aria-label="Pensando">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                ) : (
+                  explicacao.texto
+                )}
               </div>
+            ) : (
+              fala.texto && (
+                <div key={fala.id} className="licao-balao">
+                  {fala.texto}
+                </div>
+              )
             )}
             <div className="licao-bit-figura">
-              <BitSvg estado={estadoDoBit(estado)} />
+              <BitMascote
+                estado={estadoDoBit(estado, explicacao, falando)}
+                intensidade={estado.fase === "fim" ? 3 : multiplicador}
+                gatilho={reacao}
+                olhar={telaLarga ? "esquerda" : "cima"}
+              />
             </div>
           </aside>
         </div>
@@ -468,6 +566,17 @@ export default function ModoLicao({
               )}
             </div>
             <div className="licao-rodape-acoes">
+              {estado.fase === "feedback" && !estado.acertou && (
+                <button
+                  type="button"
+                  className="btn btn-lg licao-btn-explica"
+                  disabled={explicacao !== null}
+                  onClick={pedirExplicacao}
+                >
+                  <i className="bi bi-robot me-2" />
+                  {MASCOTE_NOME}, me explica
+                </button>
+              )}
               <button
                 type="button"
                 className={`btn btn-lg ${estado.fase === "feedback" && !estado.acertou ? "btn-licao-errado" : "btn-licao"}`}

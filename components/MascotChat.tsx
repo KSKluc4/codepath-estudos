@@ -7,6 +7,7 @@ import { useChapters } from "@/lib/chapters-context";
 import { MASCOTE_NOME } from "@/lib/mascote";
 import { useModoLicaoAberto } from "@/lib/modo-licao";
 import BitSvg from "./BitSvg";
+import BitMascote, { precarregarBit3D } from "./BitMascote";
 
 interface Mensagem {
   role: "user" | "assistant";
@@ -34,6 +35,7 @@ export default function MascotChat() {
   const titulo = useTituloAtual();
   const modoLicaoAberto = useModoLicaoAberto();
   const [aberto, setAberto] = useState(false);
+  const [usar3d, setUsar3d] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [texto, setTexto] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -96,6 +98,9 @@ export default function MascotChat() {
   };
 
   const esperandoPrimeiroTexto = carregando && mensagens[mensagens.length - 1]?.content === "";
+  let estadoBit: "idle" | "pensando" | "falando" = "idle";
+  if (esperandoPrimeiroTexto) estadoBit = "pensando";
+  else if (carregando) estadoBit = "falando";
 
   return (
     <div className="mascote-wrapper" hidden={modoLicaoAberto}>
@@ -160,12 +165,17 @@ export default function MascotChat() {
       <button
         type="button"
         className={`mascote-botao ${carregando ? "mascote-pensando" : ""}`}
-        onClick={() => setAberto((a) => !a)}
+        onClick={() => {
+          setAberto((a) => !a);
+          setUsar3d(true);
+        }}
+        onPointerEnter={precarregarBit3D}
+        onFocus={precarregarBit3D}
         aria-label={aberto ? `Fechar chat com o ${MASCOTE_NOME}` : `Abrir chat com o ${MASCOTE_NOME}`}
         aria-expanded={aberto}
         title={`Pergunte ao ${MASCOTE_NOME}`}
       >
-        <BitSvg />
+        <BitMascote estado={estadoBit} compacto permitir3d={usar3d} pausado={modoLicaoAberto} />
       </button>
     </div>
   );

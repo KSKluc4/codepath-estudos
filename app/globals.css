@@ -790,6 +790,32 @@ main.flex-grow-1 {
   transform: translateX(-50%) rotate(45deg);
 }
 
+.licao-balao-explicacao {
+  max-width: 280px;
+  max-height: 45vh;
+  overflow-y: auto;
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.licao-balao-explicacao .mascote-digitando {
+  padding: 0.35rem 0.25rem;
+}
+
+.licao-btn-explica {
+  --bs-btn-color: #fecaca;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-active-color: #fff;
+  --bs-btn-disabled-color: #fecaca;
+  --bs-btn-border-color: rgba(248, 113, 113, 0.55);
+  --bs-btn-hover-border-color: #f87171;
+  --bs-btn-hover-bg: rgba(248, 113, 113, 0.12);
+  --bs-btn-active-bg: rgba(248, 113, 113, 0.2);
+  --bs-btn-disabled-border-color: rgba(248, 113, 113, 0.3);
+  border-width: 2px;
+  border-radius: 0.85rem;
+  font-weight: 700;
+}
+
 .licao-card {
   padding: 1.5rem 1.5rem 1.25rem;
   border: 1px solid var(--bs-border-color);
@@ -1423,4 +1449,23 @@ main.flex-grow-1 {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ---------- Bit 3D ---------- */
+
+.bit-mascote {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.bit-mascote .bit-3d {
+  position: absolute !important;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.bit-mascote-3d .bit-3d {
+  opacity: 1;
 }

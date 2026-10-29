@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { Exercicio, QuizPergunta, SecaoConteudo } from "@/lib/types";
 import { EstadoLicao, VIDAS_POR_LICAO, iniciarLicao, montarCards } from "@/lib/licao";
 import BitSvg from "./BitSvg";
+import { precarregarBit3D } from "./BitMascote";
 import type { ProximaEtapa } from "./ModoLicao";
 
 const ModoLicao = dynamic(() => import("./ModoLicao"), {
@@ -20,6 +21,7 @@ const ModoLicao = dynamic(() => import("./ModoLicao"), {
 
 function precarregar() {
   void import("./ModoLicao");
+  precarregarBit3D();
 }
 
 export default function ComecarLicao({
